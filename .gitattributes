@@ -1,7 +1,4 @@
 # -- Git Large File System (LFS) ----------------------------------------------
 
-# Microphone measurement binary files
-*.tdms filter=lfs diff=lfs merge=lfs -text
-
 # Dynamic Link Libraries
 *.dll filter=lfs diff=lfs merge=lfs -text
