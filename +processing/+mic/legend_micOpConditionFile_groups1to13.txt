@@ -1,0 +1,22 @@
+1) Angle of attack [deg]
+2) Angle of sideslip [deg]
+3) RPS motor 1 [Hz]
+4) dPhi motor 1 - motor 1 [deg] (not used)
+5) standard deviation RPS motor 1 [Hz]
+6) current motor 1 [A]
+7) temperature motor 1 [deg C]
+8) standard deviation dPhi motor 1 - motor 1 [deg] (not used)
+9) voltage motor 1 [V]
+10) RPS motor 1 [Hz]
+11) dPhi motor 1 - motor 1 [deg] (not used)
+12) standard deviation RPS motor 1 [Hz]
+13) current motor 1 [A]
+14) temperature motor 1 [deg C]
+15) standard deviation dPhi motor 1 - motor 1 [deg] (not used)
+16) voltage motor 1 [V]
+17) day
+18) month
+19) year
+20) hour
+21) minutes
+22) seconds
