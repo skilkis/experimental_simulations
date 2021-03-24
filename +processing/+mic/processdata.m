@@ -1,4 +1,4 @@
-function [PXX,SPL,f, opp] = micDataAnalyzer(data_dir)
+function [PXX,SPL,f, opp] = processdata(data_dir)
 
 % freestream conditions ONLY FOR GROUPS 1-13 ! 
 % add 1 entry per measurement point ! 
@@ -14,7 +14,7 @@ D = 0.2032; % propeller diameter [m]
 
 %% Load microphone calibration data
 [parent_dir, ~, ~] = fileparts(mfilename("fullpath"));
-micCal = load(fullfile(parent_dir, "micCalData.mat"));
+micCal = load(fullfile(parent_dir, "calibrationData.mat"));
 
 %% Loop over all TDMS files of name "Measurement_i.tdms" in data_dir
 done = 0;
@@ -25,10 +25,6 @@ while done == 0
     idx = idx +1;
         
     % Construct filenames (mic data and operating conditions)
-%     fn = ['Measurement_' num2str(idx) '.tdms'];
-%     TDMSpath = fullfile(data_dir, fn);
-%     OPPpath = [TDMSpath(1:end-4),'txt'];
-    % Construct filenames (mic data and operating conditions)
     fn = ['Measurement_' num2str(idx) '.tdms'];
     TDMSpath = fullfile(data_dir, fn);
     OPPpath = [TDMSpath(1:end-4),'txt'];
@@ -38,13 +34,13 @@ while done == 0
         
         % Load data (dataOut should have just one channel group) keep an
         % eye on the amount of RAM used, it may fill up
-        dataOut{idx} = processing.mic.ReadFile_TDMS(TDMSpath);
+        dataOut{idx} = processing.mic.readtdms(TDMSpath);
         dataOpp(:,idx) = load(OPPpath);        
         disp(['Loaded file ' num2str(idx)])
         
        % Apply calibration
         for i=1:6 % loop over the microphones     
-            [pMic{idx}(i,:),~,~] = processing.mic.apply_cal_curve(...
+            [pMic{idx}(i,:),~,~] = processing.mic.applycalcurve(...
                 fs,...
                 dataOut{idx}{1}(:,i)-mean(dataOut{idx}{1}(:,i)),...
                 micCal.f_oct,...
@@ -55,7 +51,7 @@ while done == 0
         % perform spectral analysis
         w        = hann(length(pMic{idx})/nB); % window
         wOvrlp   = length(w)*nOverlap; % overlap window
-        [PXX{idx},SPL{idx},f{idx}] = processing.mic.spectralAnalysis(...
+        [PXX{idx},SPL{idx},f{idx}] = processing.mic.spectralanalysis(...
             pMic{idx}.',...
             w,...
             wOvrlp,...

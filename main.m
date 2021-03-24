@@ -1,1 +1,1 @@
-[PXX,SPL,f, opp] = processing.mic.micDataAnalyzer('.\data\MICS\polar1\');
+[PXX,SPL,f, opp] = processing.mic.processdata('.\data\MICS\polar1\');

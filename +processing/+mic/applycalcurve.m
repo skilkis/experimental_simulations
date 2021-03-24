@@ -1,4 +1,4 @@
-function [p,P,f] = apply_cal_curve(fs,v,f_cc,F_cc)
+function [p,P,f] = applycalcurve(fs,v,f_cc,F_cc)
 % This function takes a voltage waveform (in time domain) and multiplies it
 % by frequency-dependent calibration factors in frequency domain, returning
 % pressure values. Inter/Extrapolation of the calibration curve is used, so

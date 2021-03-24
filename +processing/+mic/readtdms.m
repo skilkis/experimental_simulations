@@ -1,4 +1,4 @@
-function [dataOut] = ReadFile_TDMS(Data_Path)
+function [dataOut] = readtdms(Data_Path)
 % This function is based on the ReadFile.m script downloaded from 
 % http://www.ni.com/example/30957/en/. It takes a .tdms file specified in
 % the input "Data_Path", reads the data, and saves it in "dataOut". This
