@@ -1,4 +1,4 @@
-%% Function spectralAnalysis.m
+%% Function spectralanalysis.m
 % Converts input time domain signal to the frequency domain using Welch's 
 % method 
 % =========================================================================
@@ -24,7 +24,7 @@
 %         SPL - sound pressure levels computed from PXX [dB]
 %         f   - frequency vector [Hz] at which the ydB values are defined
 % =========================================================================
-function [PXX,SPL,f] = spectralAnalysis(y,w,wOvrlp,fS,fEval)
+function [PXX,SPL,f] = spectralanalysis2(y,w,wOvrlp,fS,fEval)
 
 %% Compute window properties
 N  = length(w);                  % number of elements per block
