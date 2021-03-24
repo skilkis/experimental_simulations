@@ -48,12 +48,6 @@
 % =========================================================================
 function [BAL] = processdata(diskPath,fnBAL,fn0)
 
-%% Check inputs
-% check whether diskPath ends with slash, and if not, append it
-if ~strcmpi(diskPath(end),'/') || ~strcmpi(diskPath(end),'\')
-    diskPath = [diskPath,'/'];    
-end
-
 % check whether inputs for raw data and zero data have the same length, and
 % if only one zero file is given, apply it to all data sets, otherwise,
 % throw an error
