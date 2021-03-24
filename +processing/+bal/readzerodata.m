@@ -37,9 +37,8 @@ end
 % Loop over all files to load the data
 for i=1:length(fn) % for loop over the different files
     %% Load Data
-    [folder,fn{i}];
     fid  = fopen([folder,fn{i}]);
-    DATA{i}.raw= cell2mat(textscan(fid,['%f %f:%f:%f',repmat(' %f',1,10)],'headerlines',2));
+    DATA{i}.raw=cell2mat(textscan(fid,['%f %f:%f:%f',repmat(' %f',1,10)],'headerlines',2));
     fclose(fid);
     
     %% Check for repeated measurements 
