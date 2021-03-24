@@ -1,5 +1,21 @@
-function [PXX,SPL,f, opp] = processdata(data_dir)
+function [PXX,SPL,f,opp] = processdata(data_dir)
 
+cache_file = fullfile(...
+    '.cache',...
+    'processdata',...
+    sprintf("%s.mat",util.hashstring(data_dir))...
+);
+if exist(cache_file, 'file')
+    % Retrieve persisted values if cache exists
+    cache_results = load(cache_file);
+    PXX = cache_results.PXX;
+    SPL = cache_results.SPL;
+    f = cache_results.f;
+    opp = cache_results.opp;
+else
+
+% Disable warnings due to rounding
+warning('off', 'signal:check_order:InvalidOrderRounding')
 % freestream conditions ONLY FOR GROUPS 1-13 ! 
 % add 1 entry per measurement point ! 
 operManual.vInf = [40,40,40];
@@ -84,7 +100,13 @@ while done == 0
     end % end if statement check whether file exists
 end % end while loop over files
 
-
+% Save processed results to disk
+[cache_path, ~, ~] = fileparts(cache_file);
+if ~exist(cache_path, 'dir')
+    mkdir(cache_path)
+end
+save(cache_file,'PXX','SPL','f','opp')
+end
 figure('Name','Spectra')
 for i=1:6
     subplot(2,3,i), box on, hold on

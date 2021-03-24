@@ -2,3 +2,6 @@
 
 # Dynamic Link Libraries
 *.dll filter=lfs diff=lfs merge=lfs -text
+
+# MATLAB MAT files
+*.mat filter=lfs diff=lfs merge=lfs -text
