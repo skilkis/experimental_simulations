@@ -77,8 +77,8 @@ BAL.Re = BAL.V*c./BAL.nu;
 BAL = processing.bal.subtractzero(BAL,BAL0);
 
 %% Perform balance calibration
-for i=1:size(BAL.B16zeroed,1)
-    [F(i,:),M(i,:)] = processing.bal.calibrate(BAL.B16zeroed(i,:),p,pnl,arm,FX_cor,x_bend,y_bend,e);
+for i=1:size(BAL.Bzeroed,1)
+    [F(i,:),M(i,:)] = processing.bal.calibrate(BAL.Bzeroed(i,:),p,pnl,arm,FX_cor,x_bend,y_bend,e);
 end
 
 %% Compute nondimensional forces and moments

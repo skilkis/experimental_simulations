@@ -36,6 +36,6 @@ function BAL = subtractzero(BAL,BAL0)
     end
 
     % Subtract zero measurement data from the measured data
-    BAL.B16zeroed = BAL.B-BAL0.intp;
+    BAL.Bzeroed = BAL.B-BAL0.intp;
 
 end
