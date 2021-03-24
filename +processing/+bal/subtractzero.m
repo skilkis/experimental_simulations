@@ -31,7 +31,7 @@ function BAL = subtractzero(BAL,BAL0)
         try
             BAL0.intp(i,:) = find_zero_measurements(AoAr(i), AoSr(i));
         catch
-            fprintf('Run %d has to applicable zero measurement\n',i)
+            fprintf('Run %d has no applicable zero measurement\n',i)
         end
     end
 
