@@ -12,10 +12,9 @@ fs       = 51200;   % sampling frequency [Hz]
 % propeller geometry
 D = 0.2032; % propeller diameter [m]
 
-data_dir = '.\data\mic\polar1\';
-
 %% Load microphone calibration data
-micCal = load(".\data\mic\calibration_data");
+[parent_dir, ~, ~] = fileparts(mfilename("fullpath"));
+micCal = load(fullfile(parent_dir, "micCalData.mat"));
 
 %% Loop over all TDMS files of name "Measurement_i.tdms" in data_dir
 done = 0;
@@ -31,7 +30,7 @@ while done == 0
 %     OPPpath = [TDMSpath(1:end-4),'txt'];
     % Construct filenames (mic data and operating conditions)
     fn = ['Measurement_' num2str(idx) '.tdms'];
-    TDMSpath = [data_dir '\' fn];
+    TDMSpath = fullfile(data_dir, fn);
     OPPpath = [TDMSpath(1:end-4),'txt'];
     
     % Check if this file exists
