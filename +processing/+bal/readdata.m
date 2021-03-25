@@ -33,7 +33,7 @@
 % Outputs: data - structure containing output data
 %                  
 % =========================================================================
-function DATA = readdata(fn,idxB)
+function DATA = readdata(folder,fn,idxB)
 
 % %% Print status update
 % display(['Loading balance data: ',fn])
@@ -41,7 +41,7 @@ function DATA = readdata(fn,idxB)
 
 %% Load Data
 % raw data
-fid      = fopen(fn);
+fid = fopen(fullfile(folder,fn));
 read_data = cell2mat(textscan(fid,['%f %f:%f:%f',repmat(' %f',1,31)],'headerlines',2));
 fclose(fid);
 
