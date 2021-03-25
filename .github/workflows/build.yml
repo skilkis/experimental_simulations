@@ -1,0 +1,23 @@
+name: build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  matlab:
+    name: Run MATLAB Script
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      - name: Install MATLAB
+        uses: matlab-actions/setup-matlab@v0
+      - name: Run Main Script
+        uses: matlab-actions/run-command@v0
+        with:
+          command: main
