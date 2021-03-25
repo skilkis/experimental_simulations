@@ -1,1 +1,8 @@
+# Large ~1GB microphone data
 data/MIC*
+
+# Python Virtual Environment
+.env/*
+
+# Procesed data .mat files
+data/**.mat
