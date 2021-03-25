@@ -37,7 +37,9 @@ end
 % Loop over all files to load the data
 for i=1:length(fn) % for loop over the different files
     %% Load Data
-    fid  = fopen([folder,fn{i}]);
+    zero_file_path = fullfile(pwd, folder, fn{:});
+    disp(zero_file_path);
+    fid = fopen(zero_file_path);
     DATA{i}.raw=cell2mat(textscan(fid,['%f %f:%f:%f',repmat(' %f',1,10)],'headerlines',2));
     fclose(fid);
     
