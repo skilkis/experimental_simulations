@@ -19,18 +19,9 @@ function [BAL] = applycorrection(BAL)
     A_VTail = 0.0415;
     V_total = V_wing + V_fuselage + V_tail;
 
-    for i = 1:3
-
-        if i == 1
-            % BAL_new gets updated through the file
-            BAL_new = BAL.windOn.rudder0;
-        elseif i == 2
-            % BAL_new gets updated through the file
-            BAL_new = BAL.windOn.rudder10;
-        else
-            % BAL_new gets updated through the file
-            BAL_new = BAL.windOn.j_sweep;
-        end
+    for field = fieldnames(BAL.windOn)'
+        % TODO find more semantic name for BAL_new
+        BAL_new = BAL.windOn.(field{:});
 
         % Blockage
 
@@ -114,12 +105,6 @@ function [BAL] = applycorrection(BAL)
 %         BAL_new.CD = BAL_new.CD - del_D/(0.5*BAL_new.rho.*BAL_new.V.^2.*BAL_new.S);
 
         % Update original file
-        if i == 1
-            BAL.windOn.rudder0 = BAL_new;
-        elseif i == 2
-            BAL.windOn.rudder10 = BAL_new;
-        else
-            BAL.windOn.j_sweep = BAL_new;
-        end
+        BAL.windOn.(field{:}) = BAL_new;
     end
 end
