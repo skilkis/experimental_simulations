@@ -29,16 +29,10 @@
 % =========================================================================
 function [BAL0] = readzerodata(folder,fn,idxB)
 
-% convert variable fn to cell if not given as cell as input
-if ~iscell(fn)
-    fn = {fn};
-end
-
 % Loop over all files to load the data
 for i=1:length(fn) % for loop over the different files
     %% Load Data
-    zero_file_path = fullfile(pwd, folder, fn{:});
-    disp(zero_file_path);
+    zero_file_path = fullfile(folder, fn);
     fid = fopen(zero_file_path);
     DATA{i}.raw=cell2mat(textscan(fid,['%f %f:%f:%f',repmat(' %f',1,10)],'headerlines',2));
     fclose(fid);
