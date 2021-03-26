@@ -50,7 +50,6 @@ fbin = f(2)-f(1); % frequency bin width [Hz]
 % display('coherent gain correction NOT applied --> proper background noise')
 
 PXX = pxx*fbin; % power spectral density [unit/Hz] (pxx multiplied with frequency bin width to get power of signal, see http://www.fhnw.ch/technik/ime/publikationen/2012/how-to-use-the-fft-and-matlab2019s-pwelch-function-for-signal-and-noise-simulations-and-measurements)
-display('frequency bin width correction applied --> proper spectral levels for integration')
 
 %% Compute Sound Pressure Level from PSD
 p0  = 20e-6; % reference sound pressure [Pa] 
