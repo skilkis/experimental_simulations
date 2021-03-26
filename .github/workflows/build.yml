@@ -21,3 +21,8 @@ jobs:
         uses: matlab-actions/run-command@v0
         with:
           command: main
+      - name: Upload processed .mat file
+        uses: actions/upload-artifact@v2
+        with:
+          name: processed_data
+          path: data/**/*.mat
