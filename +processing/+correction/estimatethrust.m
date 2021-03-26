@@ -12,7 +12,10 @@ catch
     error('No data exists for V=%f', velocity)
 end
 
-Tc = interp1(advanceRatios, thrustCoefficients, advanceRatio, 'makima');
+% Tc = interp1(advanceRatios, thrustCoefficients, advanceRatio, 'makima');
+p = polyfit(advanceRatios,thrustCoefficients,2);
+Tc = polyval(p, advanceRatio);
+
 
 figure('Name', 'Thrust Interpolation')
 plot(advanceRatios, thrustCoefficients, '-o', 'DisplayName', 'Data')
@@ -24,7 +27,6 @@ ylabel('Thrust Coefficient')
 title(...
     sprintf('T_c vs. J, V = %d [m/s]', round(velocity))...
 );
-
 hold off
 
 end
