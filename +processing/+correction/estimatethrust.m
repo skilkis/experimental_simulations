@@ -17,17 +17,17 @@ p = polyfit(advanceRatios,thrustCoefficients,2);
 Tc = polyval(p, advanceRatio);
 
 
-figure('Name', 'Thrust Interpolation')
-plot(advanceRatios, thrustCoefficients, '-o', 'DisplayName', 'Data')
-hold on
-plot(advanceRatio, Tc, '-or', 'DisplayName', 'Interpolated');
-legend('Location', 'Best')
-xlabel('Advance Ratio')
-ylabel('Thrust Coefficient')
-title(...
-    sprintf('T_c vs. J, V = %d [m/s]', round(velocity))...
-);
-hold off
+% figure('Name', 'Thrust Interpolation')
+% plot(advanceRatios, thrustCoefficients, '-o', 'DisplayName', 'Data')
+% hold on
+% plot(advanceRatio, Tc, '-or', 'DisplayName', 'Interpolated');
+% legend('Location', 'Best')
+% xlabel('Advance Ratio')
+% ylabel('Thrust Coefficient')
+% title(...
+%     sprintf('T_c vs. J, V = %d [m/s]', round(velocity))...
+% );
+% hold off
 
 end
 
