@@ -30,7 +30,7 @@ function [BAL] = applycorrection(BAL)
         % Compute factors based on constants provided
         Epsilon_wing = ones(size(BAL_new.CD)) * (K1_wing*Tau_wing*V_wing)/(A_tunnel)^(3/2);
         Epsilon_fuselage = ones(size(BAL_new.CD)) * (K3*Tau_fuselage*V_fuselage)/(A_tunnel)^(3/2);
-        Epsilon_tail = ones(size(BAL_new.CD))*(K1_tail*Tau_tail*V_tail)/(A_tunnel)^(3/2);
+        Epsilon_tail = ones(size(BAL_new.CD)) * (K1_tail*Tau_tail*V_tail)/(A_tunnel)^(3/2);
 
         % Wake Blockage
         S = 0.2172;
@@ -62,8 +62,7 @@ function [BAL] = applycorrection(BAL)
 
         % Perform slipstream blockage correction with thrust coefficient
         % value
-%         Thrust_coefficient = BAL_new.CTp;           % Updated using prop-off data and stored as CT = T / (rho*n^2*D^4) in BAL_forces
-        Thrust_coefficient = BAL_new.CT;
+        Thrust_coefficient = BAL_new.TC1 + BAL_new.TC2;
         Epsilon_Slipstream = -Sp*(sqrt(1+(8*Thrust_coefficient)/pi())-1)/(2*pi()*Breadth_tunnel*Height_tunnel);
 
         Epsilon_total = Epsilon_wing + Epsilon_fuselage + Epsilon_tail + Epsilon_Wake_Blockage + Epsilon_Slipstream;
