@@ -48,7 +48,7 @@
 %                      BAL.B16zeroed -> raw data of B1-6 (steps), with zero
 %                                       offset removed
 % =========================================================================
-function [BAL] = calcforces(BAL,BAL0,D,S,b,c,XmRefB,XmRefM,dAoA,dAoS,modelType,modelPos,testSec)
+function [BAL] = calcforces(BAL,BAL0,D,S,b,c,XmRefB,XmRefM,YmProp,dAoA,dAoS,modelType,modelPos,testSec)
 
 %% Compute operating conditions
 % get operating conditions 
@@ -81,22 +81,7 @@ for i=1:size(BAL.Bzeroed,1)
     [F(i,:),M(i,:)] = processing.bal.calibrate(BAL.Bzeroed(i,:),p,pnl,arm,FX_cor,x_bend,y_bend,e);
 end
 
-%% Compute nondimensional forces and moments
-CF(:,1) = F(:,1) ./ (oper.qInf*S);
-CF(:,2) = F(:,2) ./ (oper.qInf*S);
-CF(:,3) = F(:,3) ./ (oper.qInf*S);
-CM(:,1) = M(:,1) ./ (oper.qInf*S*b);
-CM(:,2) = M(:,2) ./ (oper.qInf*S*c);
-CM(:,3) = M(:,3) ./ (oper.qInf*S*b);
-
-%% Redefinition of the aerodynamic coefficients in model reference system
-% get angles of incidence
-AoA = BAL.AoA - dAoA; % correct AoA for constant AoA offset [deg]
-AoS = BAL.AoS - dAoS; % correct AoS for constant AoS offset [deg]
-BAL.AoA = AoA;
-BAL.AoS = AoS;
-
-% Estimate thrust from graph of tc vs ct
+%% Estimate thrust from graph of tc vs ct
 
 % Iterating through velocities in nearest tenths (i.e. 20, 30, 40)
 BAL.TC1 = zeros(length(BAL.V),1);
@@ -117,57 +102,78 @@ for V = Vmeas
         .*BAL.rpsM2(idx).^2*D.^4)./(oper.qInf(idx)*S);
 end
 
+%% Compute nondimensional forces and moments
+CF(:,1) = F(:,1) ./ (oper.qInf*S);
+CF(:,2) = F(:,2) ./ (oper.qInf*S);
+CF(:,3) = F(:,3) ./ (oper.qInf*S);
+CM(:,1) = M(:,1) ./ (oper.qInf*S*b);
+CM(:,2) = M(:,2) ./ (oper.qInf*S*c);
+CM(:,3) = M(:,3) ./ (oper.qInf*S*b);
+
+%% Redefinition of the aerodynamic coefficients in model reference system
+% get angles of incidence
+AoA = BAL.AoA - dAoA; % correct AoA for constant AoA offset [deg]
+AoS = BAL.AoS - dAoS; % correct AoS for constant AoS offset [deg]
+BAL.AoA = AoA;
+BAL.AoS = AoS;
 
 % compute forces and moments
-if strcmpi(modelType,'aircraft') || strcmpi(modelType,'3dwing')
+% if strcmpi(modelType,'aircraft') || strcmpi(modelType,'3dwing')
     % forces in balance axis system
 %     CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA); % tangential force [N]
-    CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
-    CFn = CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
-    CFs = -CF(:,2); % side force [N]
-    
-    % moments with respect to the moment point in the balance axis system (XmRef)
-    CMr = CM(:,1) - XmRefB(2)*CF(:,3) + XmRefB(3)*CF(:,2); % rolling moment [Nm]
-    CMp = CM(:,2) - XmRefB(3)*CF(:,1) + XmRefB(1)*CF(:,3); % pitching moment [Nm]
-    CMy = CM(:,3) + XmRefB(2)*CF(:,1) - XmRefB(1)*CF(:,2); % yawing moment [Nm] 
+CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
+CFn = CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
+CFs = -CF(:,2); % side force [N]
 
-    % recalculate moments in the airplane axis system
-    CMr = CMr.*cosd(AoA) - CMy.*sind(AoA);
-    CMp = CMp;
-    CMy = CMy.*cosd(AoA) + CMr.*sind(AoA);
+% moments with respect to the moment point in the balance axis system (XmRef)
+CMr = CM(:,1) - XmRefB(2)*CF(:,3) + XmRefB(3)*CF(:,2); % rolling moment [Nm]
+CMp = CM(:,2) - XmRefB(3)*CF(:,1) + XmRefB(1)*CF(:,3); % pitching moment [Nm]
+CMy = CM(:,3) + XmRefB(2)*CF(:,1) - XmRefB(1)*CF(:,2); % yawing moment [Nm]
+% Isolating yawing moment due to aerodynamic effects and not thrust
+% Motor 1 creates a positive yawing moment, while motor 2 creates
+% a negative one. Therefore, the yawing moment due to thrust is
+% added to compensate for M2, while it is subtracted for M1.
+CMya = CMy + (BAL.CFtM2 - BAL.CFtM1) * YmProp;  % Aerodynamic yaming moment
+
+% recalculate moments in the airplane axis system
+CMr = CMr.*cosd(AoA) - CMy.*sind(AoA);
+CMp = CMp;
+CMy = CMy.*cosd(AoA) + CMr.*sind(AoA);
+CMya = CMya.*cosd(AoA) + CMr.*sind(AoA);
     
     % account for model orientation (upper surface pointing down or up in
     % the wind tunnel)
-    if strcmpi(modelPos,'normal')
-        CFt = +CF(:,1).*cosd(AoA) + CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
-        CFn = -CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
-        CMr = -CMr;
-        CMp = -CMp;
-        CMy = -CMy;
-    end
+%     if strcmpi(modelPos,'normal')
+%         CFt = +CF(:,1).*cosd(AoA) + CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
+%         CFn = -CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
+%         CMr = -CMr;
+%         CMp = -CMp;
+%         CMy = -CMy;
+%         CMya = -CMya;
+%     end
     
-elseif strcmpi(modelType,'halfwing') % for this case, only the case of angle-of-attack variations is programmed (sideslip always zero)
-
-    % forces
-    CFt = CF(:,1) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust[N]
-    CFn = CF(:,2); % normal force [N]
-    CFs = CF(:,3); % side force [N]
-    
-    % moments
-    CMr = CM(:,1)          + XmRefB(3)*CF(:,2)*(c/b) - XmRefB(2)*CF(:,3)*(c/b); % rolling moment [Nm]
-    CMp = -CM(:,3)*(c/b) - XmRefB(2)*CF(:,1)         + XmRefB(1)*CF(:,2);         % pitching moment [Nm]
-    CMy = CM(:,2)*(c/b)  + XmRefB(1)*CF(:,3)*(c/b) - XmRefB(3)*CF(:,1)*(c/b); % yawing moment [Nm] 
-
-    % account for model orientation (upper surface pointing down or up in
-    % the wind tunnel)
-    if strcmpi(modelPos,'inverted')
-        CFn = -CFn; % normal force [N]
-        CMr = -CMr;
-        CMp = -CMp;
-        CMy = -CMy;
-    end
-   
-end % end if statement model orientation
+% elseif strcmpi(modelType,'halfwing') % for this case, only the case of angle-of-attack variations is programmed (sideslip always zero)
+% 
+%     % forces
+%     CFt = CF(:,1) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust[N]
+%     CFn = CF(:,2); % normal force [N]
+%     CFs = CF(:,3); % side force [N]
+%     
+%     % moments
+%     CMr = CM(:,1)          + XmRefB(3)*CF(:,2)*(c/b) - XmRefB(2)*CF(:,3)*(c/b); % rolling moment [Nm]
+%     CMp = -CM(:,3)*(c/b) - XmRefB(2)*CF(:,1)         + XmRefB(1)*CF(:,2);         % pitching moment [Nm]
+%     CMy = CM(:,2)*(c/b)  + XmRefB(1)*CF(:,3)*(c/b) - XmRefB(3)*CF(:,1)*(c/b); % yawing moment [Nm] 
+% 
+%     % account for model orientation (upper surface pointing down or up in
+%     % the wind tunnel)
+%     if strcmpi(modelPos,'inverted')
+%         CFn = -CFn; % normal force [N]
+%         CMr = -CMr;
+%         CMp = -CMp;
+%         CMy = -CMy;
+%     end
+%    
+% end % end if statement model orientation
 
 %% Compute lift/drag/pitching moment
 CFl   =  (CFn.*cosd(AoA)-CFt.*sind(AoA)); % lift
@@ -217,6 +223,7 @@ BAL.CMr  = CMr;
 BAL.CMp  = CMp;
 BAL.CMp25c  = CMp25c;
 BAL.CMy  = CMy;
+BAL.CMya = CMya;
 
 BAL.b  = b;
 BAL.c  = c;
