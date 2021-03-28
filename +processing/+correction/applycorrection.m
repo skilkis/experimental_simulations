@@ -1,4 +1,4 @@
-function [BAL_new,BAL_new_individual_return] = applycorrection(BAL)
+function [BalDataCorr] = applycorrection(BAL)
     % Outputs: BAL_new - updated measurement file
 
     % Inputs: BAL - To be corrected measurement file, idxB - Master index file
@@ -20,33 +20,45 @@ function [BAL_new,BAL_new_individual_return] = applycorrection(BAL)
     Tau_tail = 0.86;
     A_tunnel = 2.044;
     A_VTail = 0.0415;
-    V_total = V_wing + V_fuselage + V_tail;
+    V_total = V_wing + V_fuselage + V_tail;  % Volume not velocity
 
     for field = fieldnames(BAL.windOn)'
-        % TODO find more semantic name for BAL_new
-        BAL_new = BAL.windOn.(field{:});
-        BAL_new_individual(1:5) = BAL_new;
+        % Making copies of measured data to mutate differently
+        % Base = Base data without any corrections
+        % SB = Solid Blockage
+        % WB = Wake Blockage
+        % SS = Slipstream Blockage
+        % SL = Streamline Correction due to lift interference
+        % DW = Downwash Correciton due to vertical tail
+        % Total = All corrections applied
+        Base = BAL.windOn.(field{:});
+        SB = BAL.windOn.(field{:});
+        WB = BAL.windOn.(field{:});
+        SS = BAL.windOn.(field{:});
+        SL = BAL.windOn.(field{:});
+        DW = BAL.windOn.(field{:});
+        Total = BAL.windOn.(field{:});
 
         % Blockage
 
         % Solid Blockage
 
         % Compute factors based on constants provided
-        Epsilon_wing = ones(size(BAL_new.CD)) * (K1_wing*Tau_wing*V_wing)/(A_tunnel)^(3/2);
-        Epsilon_fuselage = ones(size(BAL_new.CD)) * (K3*Tau_fuselage*V_fuselage)/(A_tunnel)^(3/2);
-        Epsilon_tail = ones(size(BAL_new.CD)) * (K1_tail*Tau_tail*V_tail)/(A_tunnel)^(3/2);
+        Epsilon_wing = ones(size(Base.CD)) * (K1_wing*Tau_wing*V_wing)/(A_tunnel)^(3/2);
+        Epsilon_fuselage = ones(size(Base.CD)) * (K3*Tau_fuselage*V_fuselage)/(A_tunnel)^(3/2);
+        Epsilon_tail = ones(size(Base.CD)) * (K1_tail*Tau_tail*V_tail)/(A_tunnel)^(3/2);
 
         % Wake Blockage
         S = 0.2172;
-        Cd_u = BAL_new.CD;
+        Cd_u = Base.CD;
         Cd_0 = 0.0583;          % pre-recorded for a sideslip variation and hard-coded
-        Cl_u_2 = BAL_new.CL.^2;
+        Cl_u_2 = Base.CL.^2;
 
         % Slope of Cd vs Cl^2 graph used to estimate induced drag - (for this data set, there is no variation of V or RPM in one polar)
         Slope = mean(diff(Cd_u)) ./ mean(diff(Cl_u_2));
 
         % Compute Cd_0 and induced drag, check if separated flow
-        Cl_u = BAL_new.CL;
+        Cl_u = Base.CL;
         Cd_i = (Cl_u.^2 * Slope) - Cd_0;
         Cd_s = Cd_u - Cd_i - Cd_0;
 
@@ -61,89 +73,85 @@ function [BAL_new,BAL_new_individual_return] = applycorrection(BAL)
         Breadth_tunnel = 1.8;
         Height_tunnel = 1.24;
         Sp = 0.0314;
-
-        V = BAL_new.V;
-
+        
         % Perform slipstream blockage correction with thrust coefficient
-        % value
-        Thrust_coefficient = BAL_new.TC1 + BAL_new.TC2;
+        Thrust_coefficient = Base.TC1 + Base.TC2;
         Epsilon_Slipstream = -Sp*(sqrt(1+(8*Thrust_coefficient)/pi())-1)/(2*pi()*Breadth_tunnel*Height_tunnel);
-
         Epsilon_total = Epsilon_wing + Epsilon_fuselage + Epsilon_tail + Epsilon_Wake_Blockage + Epsilon_Slipstream;
 
-        % Update velocity due to blokages
-        BAL_new.V = V.*(1 + Epsilon_total);
-        BAL_new_individual(1).V = V.*(1 + Epsilon_wing + Epsilon_fuselage + Epsilon_tail);
-        BAL_new_individual(2).V = V.*(1+Epsilon_Wake_Blockage);
-        BAL_new_individual(3).V = V.*(1+Epsilon_Slipstream);
-
-        % Correct important coefficents due to blockages
-        BAL_new.CD = BAL_new.CD.*V.^2 ./ BAL_new.V.^2;
-        BAL_new.CL = BAL_new.CL.*V.^2 ./ BAL_new.V.^2;
-        BAL_new.CY = BAL_new.CY.*V.^2 ./ BAL_new.V.^2;
-        BAL_new.CMy = BAL_new.CMy.*V.^2 ./ BAL_new.V.^2;
+        SB.V = Base.V.*(1 + Epsilon_wing + Epsilon_fuselage + Epsilon_tail);
+        WB.V = Base.V.*(1+Epsilon_Wake_Blockage);
+        SS.V = Base.V.*(1+Epsilon_Slipstream);
+        Total.V = Base.V.*(1 + Epsilon_total);
         
-        BAL_new_individual(1).CD = BAL_new_individual(1).CD.*V.^2 ./ BAL_new_individual(1).V.^2;
-        BAL_new_individual(1).CL = BAL_new_individual(1).CL.*V.^2 ./ BAL_new_individual(1).V.^2;
-        BAL_new_individual(1).CY = BAL_new_individual(1).CY.*V.^2 ./ BAL_new_individual(1).V.^2;
-        BAL_new_individual(1).CMy = BAL_new_individual(1).CMy.*V.^2 ./ BAL_new_individual(1).V.^2;
+        % Correct Solid Blockages
+        SB.CD = SB.CD.*Base.V.^2 ./ SB.V.^2;
+        SB.CL = SB.CL.*Base.V.^2 ./ SB.V.^2;
+        SB.CY = SB.CY.*Base.V.^2 ./ SB.V.^2;
+        SB.CMy = SB.CMy.*Base.V.^2 ./ SB.V.^2;
         
-        BAL_new_individual(2).CD = BAL_new_individual(2).CD.*V.^2 ./ BAL_new_individual(2).V.^2;
-        BAL_new_individual(2).CL = BAL_new_individual(2).CL.*V.^2 ./ BAL_new_individual(2).V.^2;
-        BAL_new_individual(2).CY = BAL_new_individual(2).CY.*V.^2 ./ BAL_new_individual(2).V.^2;
-        BAL_new_individual(2).CMy = BAL_new_individual(2).CMy.*V.^2 ./ BAL_new_individual(2).V.^2;
+        % Correct Only Wake Blockage
+        WB.CD = WB.CD.*Base.V.^2 ./ WB.V.^2;
+        WB.CL = WB.CL.*Base.V.^2 ./ WB.V.^2;
+        WB.CY = WB.CY.*Base.V.^2 ./ WB.V.^2;
+        WB.CMy = WB.CMy.*Base.V.^2 ./ WB.V.^2;
         
-        BAL_new_individual(3).CD = BAL_new_individual(3).CD.*V.^2 ./ BAL_new_individual(3).V.^2;
-        BAL_new_individual(3).CL = BAL_new_individual(3).CL.*V.^2 ./ BAL_new_individual(3).V.^2;
-        BAL_new_individual(3).CY = BAL_new_individual(3).CY.*V.^2 ./ BAL_new_individual(3).V.^2;
-        BAL_new_individual(3).CMy = BAL_new_individual(3).CMy.*V.^2 ./ BAL_new_individual(3).V.^2;
+        % Correct Only Slipstream Blockage
+        SS.CD = SS.CD.*Base.V.^2 ./ SS.V.^2;
+        SS.CL = SS.CL.*Base.V.^2 ./ SS.V.^2;
+        SS.CY = SS.CY.*Base.V.^2 ./ SS.V.^2;
+        SS.CMy = SS.CMy.*Base.V.^2 ./ SS.V.^2;
         
+        % Correct coefficents due to all blockages
+        Total.CD = Total.CD.*Base.V.^2 ./ Total.V.^2;
+        Total.CL = Total.CL.*Base.V.^2 ./ Total.V.^2;
+        Total.CY = Total.CY.*Base.V.^2 ./ Total.V.^2;
+        Total.CMy = Total.CMy.*Base.V.^2 ./ Total.V.^2;
 
-        CN_Tail = BAL_new.CY;
+        CN_Tail = Total.CY;
 
-        % CN_Tail = CN_Model;
-
-        % Streamline Curvature correction (lift interference) for the vertical tail due to its
-        % own circulation
+        % Streamline Curvature correction (lift interference) for the
+        % vertical tail due to its own circulation
         Tau_2 = 0.07;           % Taper = 0.68, MAC = 0.17, Lt = 0.085, Lt/2H = 0.11, Fig. 10.37 in the Barlow book
         Delta = 0.12;          % Elliptic loading for a closed elliptic jet, Fig. 10.32 in the Barlow book
-        Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ mean(diff(BAL_new.AoS));
-        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*BAL_new.CY;
+        Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ mean(diff(Total.AoS));
+        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*Total.CY;
         Delta_Cm = 0.125*Delta_Beta_Total_SC*Slope_CN_vs_Beta;               % moment = arm*db*dCn/db (Barlow page 377)
-        BAL_new.CD = BAL_new.CD + Delta*(A_VTail/A_tunnel)*BAL_new.CL.^2;           % Equation 2.10 pre-test report
+        Total.CD = Total.CD + Delta*(A_VTail/A_tunnel)*Total.CL.^2;           % Equation 2.10 pre-test report
 
-        BAL_new.CMy = BAL_new.CMy + Delta_Cm;
+        Total.CMy = Total.CMy + Delta_Cm;
         
         % Downwash correction
-        Beta_u = BAL_new.AoS;
+        Beta_u = Total.AoS;
         Beta_downwash = Beta_u+(Delta*(A_VTail/A_tunnel)*CN_Tail*57.3);
 
         % Correct beta for both
-        BAL_new.AoS = Delta_Beta_Total_SC + Beta_downwash;
-        
+        Total.AoS = Delta_Beta_Total_SC + Beta_downwash;
         
         % Only slipstream correction
-        CN_Tail = BAL_new_individual(4).CY;
-        Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ mean(diff(BAL_new_individual(4).AoS));
-        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*BAL_new_individual(4).CY;
+        CN_Tail = SL.CY;
+        Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ mean(diff(SL.AoS));
+        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*SL.CY;
         Delta_Cm = 0.125*Delta_Beta_Total_SC*Slope_CN_vs_Beta;               % moment = arm*db*dCn/db (Barlow page 377)
-        BAL_new_individual(4).CD = BAL_new_individual(4).CD + Delta*(A_VTail/A_tunnel)*BAL_new_individual(4).CL.^2;           % Equation 2.10 pre-test report
+        SL.CD = SL.CD + Delta*(A_VTail/A_tunnel)*SL.CL.^2;           % Equation 2.10 pre-test report
 
-        BAL_new_individual(4).CMy = BAL_new_individual(4).CMy + Delta_Cm;
-        BAL_new_individual(4).AoS = BAL_new_individual(4).AoS + Delta_Beta_Total_SC;
+        SL.CMy = SL.CMy + Delta_Cm;
+        SL.AoS = SL.AoS + Delta_Beta_Total_SC;
         
         % Downwash correction
-        Beta_u = BAL_new_individual(5).AoS;
+        Beta_u = DW.AoS;
         Beta_downwash = Beta_u+(Delta*(A_VTail/A_tunnel)*CN_Tail*57.3);
-        BAL_new_individual(5).AoS = Beta_downwash;
+        DW.AoS = Beta_downwash;
         
 %         % Buoyancy correction, Equation 2.2 pre-test report
 %         dp_by_dv = ;                        % from pressure taps along the fuselage
 %         del_D = dp_by_dv * V_total;
 %         BAL_new.CD = BAL_new.CD - del_D/(0.5*BAL_new.rho.*BAL_new.V.^2.*BAL_new.S);
-
-        % Update original file
-        BAL.windOn.(field{:}) = BAL_new;
-        BAL_new_individual_return.(field{:}) = BAL_new_individual;
+        BalDataCorr.(field{:}).SB = SB;
+        BalDataCorr.(field{:}).WB = WB;
+        BalDataCorr.(field{:}).SS = SS;
+        BalDataCorr.(field{:}).SL = SL;
+        BalDataCorr.(field{:}).DW = DW;
+        BalDataCorr.(field{:}).Total = Total;
     end
 end
