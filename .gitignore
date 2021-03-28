@@ -7,4 +7,5 @@ data/MIC*
 # Procesed data .mat files
 data/**.mat
 
+# MATLAB temporary files
 *.asv
