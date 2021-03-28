@@ -79,6 +79,8 @@ D        = 0.2032; % propeller diameter [m]
 R        = D/2;   % propeller radius [m]
 
 % moment reference points
+% Use XMRefB and not XMRefM
+% To get the CG to be at 0.55 we can subtract 0.3 on the x coordinate
 XmRefB    = [0,0,0.0465/c]; % moment reference points (x,y,z coordinates) in balance reference system [1/c] 
 XmRefM    = [0.25,0,0];     % moment reference points (x,y,z coordinates) in model reference system [1/c] 
 
