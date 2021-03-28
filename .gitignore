@@ -6,3 +6,5 @@ data/MIC*
 
 # Procesed data .mat files
 data/**.mat
+
+*.asv
