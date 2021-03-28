@@ -83,7 +83,7 @@ R        = D/2;   % propeller radius [m]
 % To get the CG to be at 0.55 we can subtract 0.3 on the x coordinate
 XmRefB    = [0,0,0.0465/c]; % moment reference points (x,y,z coordinates) in balance reference system [1/c] 
 XmRefM    = [0.25,0,0];     % moment reference points (x,y,z coordinates) in model reference system [1/c]
-YmProp    = 0.19558/c;      % y coordinate offset of the propeller from the centerline [1/c]
+YmProp    = 0.202565/c;      % y coordinate offset of the propeller from the centerline [1/c]
 
 % incidence angle settings
 dAoA      = 0.0; % angle of attack offset (subtracted from measured values)   
