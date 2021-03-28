@@ -190,6 +190,8 @@ CFl   =  (CFn.*cosd(AoA)-CFt.*sind(AoA)); % lift
 CFd   =  (CFn.*sind(AoA)+CFt.*cosd(AoA)).*cosd(AoS)+CFs.*sind(AoS); % drag
 CFyaw = -(CFn.*sind(AoA)+CFt.*cosd(AoA)).*sind(AoS)+CFs.*cosd(AoS); % sideforce
 CMp25c = CMp + CFn*(0.25-XmRefM(1))-CFt*(0.0-XmRefM(3));
+% The reference system is such that the model MAC is at (0, 0, 0)
+% https://brightspace.tudelft.nl/d2l/le/285568/discussions/threads/79381/View
     
 %% Write forces to BAL data structure
 BAL.FX  = F(:,1);
