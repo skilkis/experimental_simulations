@@ -98,47 +98,31 @@ BAL.AoS = AoS;
 
 % Estimate thrust from graph of tc vs ct
 
-% V = 20
-idx_V20 = find(abs(BAL.V - 20) <= 3);
+% Iterating through velocities in nearest tenths (i.e. 20, 30, 40)
 BAL.TC1 = zeros(length(BAL.V),1);
 BAL.TC2 = zeros(length(BAL.V),1);
+BAL.CFtM1 = zeros(length(BAL.V),1);
+BAL.CFtM2 = zeros(length(BAL.V),1);
+Vmeas = unique(round(BAL.V, -1))'; %Measured velocities (i.e. 20, 30, 40)
 
-% Motor 1
-C_T1_V20 = processing.correction.estimatethrust(20,BAL.J_M1(idx_V20));
-BAL.TC1(idx_V20) = C_T1_V20.*(BAL.rho(idx_V20).*BAL.rpsM1(idx_V20).^2*D.^4)./(oper.qInf(idx_V20)*S);
-
-% Motor 2
-C_T2_V20 = processing.correction.estimatethrust(20,BAL.J_M2(idx_V20));
-BAL.TC2(idx_V20) = C_T2_V20.*(BAL.rho(idx_V20).*BAL.rpsM2(idx_V20).^2*D.^4)./(oper.qInf(idx_V20)*S);
-
-% V = 30
-idx_V30 = find(abs(BAL.V - 30) <= 3);
-
-% Motor 1
-C_T1_V30 = processing.correction.estimatethrust(30,BAL.J_M1(idx_V30));
-BAL.TC1(idx_V30) = C_T1_V30.*(BAL.rho(idx_V30).*BAL.rpsM1(idx_V30).^2*D.^4)./(oper.qInf(idx_V30)*S);
-
-% Motor 2
-C_T2_V30 = processing.correction.estimatethrust(30,BAL.J_M2(idx_V30));
-BAL.TC2(idx_V30) = C_T2_V30.*(BAL.rho(idx_V30).*BAL.rpsM2(idx_V30).^2*D.^4)./(oper.qInf(idx_V30)*S);
-
-% V = 40
-idx_V40 = find(abs(BAL.V - 40) <= 3);
-
-% Motor 1
-C_T1_V40 = processing.correction.estimatethrust(40,BAL.J_M1(idx_V40));
-BAL.TC1(idx_V40) = C_T1_V40.*(BAL.rho(idx_V40).*BAL.rpsM1(idx_V40).^2*D.^4)./(oper.qInf(idx_V40)*S);
-
-% Motor 2
-C_T2_V40 = processing.correction.estimatethrust(40,BAL.J_M2(idx_V40));
-BAL.TC2(idx_V40) = C_T2_V40.*(BAL.rho(idx_V40).*BAL.rpsM2(idx_V40).^2*D.^4)./(oper.qInf(idx_V40)*S);
+% Estimating thrust coefficient and normalized thrust force per motor
+for V = Vmeas
+    idx = find(abs(BAL.V - V) <= 3);
+    BAL.TC1(idx) = processing.correction.estimatethrust(V,BAL.J_M1(idx));
+    BAL.TC2(idx) = processing.correction.estimatethrust(V,BAL.J_M2(idx));
+    % Normalized tangential force (thrust) due to motor 1 and 2:
+    BAL.CFtM1(idx) = BAL.TC1(idx).*(BAL.rho(idx)...
+        .*BAL.rpsM1(idx).^2*D.^4)./(oper.qInf(idx)*S);
+    BAL.CFtM2(idx) = BAL.TC2(idx).*(BAL.rho(idx)...
+        .*BAL.rpsM2(idx).^2*D.^4)./(oper.qInf(idx)*S);
+end
 
 
 % compute forces and moments
 if strcmpi(modelType,'aircraft') || strcmpi(modelType,'3dwing')
     % forces in balance axis system
 %     CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA); % tangential force [N]
-    CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA) - BAL.TC1 - BAL.TC2; % tangential force without thrust [N]
+    CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
     CFn = CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
     CFs = -CF(:,2); % side force [N]
     
@@ -155,7 +139,7 @@ if strcmpi(modelType,'aircraft') || strcmpi(modelType,'3dwing')
     % account for model orientation (upper surface pointing down or up in
     % the wind tunnel)
     if strcmpi(modelPos,'normal')
-        CFt = +CF(:,1).*cosd(AoA) + CF(:,3).*sind(AoA) - BAL.TC1 - BAL.TC2; % tangential force without thrust [N]
+        CFt = +CF(:,1).*cosd(AoA) + CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
         CFn = -CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
         CMr = -CMr;
         CMp = -CMp;
@@ -165,7 +149,7 @@ if strcmpi(modelType,'aircraft') || strcmpi(modelType,'3dwing')
 elseif strcmpi(modelType,'halfwing') % for this case, only the case of angle-of-attack variations is programmed (sideslip always zero)
 
     % forces
-    CFt = CF(:,1) - BAL.TC1 - BAL.TC2; % tangential force without thrust[N]
+    CFt = CF(:,1) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust[N]
     CFn = CF(:,2); % normal force [N]
     CFs = CF(:,3); % side force [N]
     
