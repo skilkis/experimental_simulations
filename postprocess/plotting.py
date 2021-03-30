@@ -41,17 +41,15 @@ def figure(
         kwargs: Keyword arguments to pass to plt.subplots
     """
     try:
-        rcParamsDefault = matplotlib.rcParams.copy()
         with plt.style.context(style):
             # Modify rcParams locally
-            matplotlib.rc("lines", linewidth=1)
+            plt.style.use({"lines.linewidth": 1})
             fig, ax = plt.subplots(num=name, figsize=figsize, **kwargs)
             yield fig, ax
     finally:
         if os.getenv("CI") is None and PLOT:
             plt.show()
         fig.savefig(fname=directory / f"{name}.pdf", bbox_inches="tight")
-        matplotlib.rcParams = rcParamsDefault  # Reset rcParams to default
 
 
 REG_LABEL_RE = (
