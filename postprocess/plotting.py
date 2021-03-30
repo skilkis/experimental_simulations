@@ -51,13 +51,6 @@ def figure(
         fig.savefig(fname=directory / f"{name}.pdf", bbox_inches="tight")
 
 
-REG_LABEL_RE = (
-    r"(?<coef>\$*\{+coef[^\{]*\}+\$*)"
-    r"(?<depvar>\$*[^\{]*\$*)[\^]{1}"
-    r"(?<power>\$*\{+power[^\{]*\}+\$*)"
-)
-
-
 class Regression:
     """Runs a regression on (x, y) with a polynomial of ``deg``."""
 
