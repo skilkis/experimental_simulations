@@ -179,11 +179,7 @@ with figure("SlipstreamJSweep") as (fig, ax):
     ax.set_xlabel("Port Engine Thrust Coefficient $T_{c_{P}}$")
     ax.set_ylabel("Yaw Moment Coefficient $C_n$")
     ax.legend(loc="best", ncol=2)
-    ax.set_ylabel("Yaw Moment Coefficient $C_n$")
-    ax.legend(loc="best")
 
-# Plot of Cn beta for velocity 20 and 40, zero thrust
-# TODO find out why negative Cn_beta does not work?
 with figure("CnBetaRudder0Thrust0") as (fig, ax):
     d = DATA["BalData"].windOn.rudder0  # Select relevant data
     d_corr = DATA["BalDataCorr"].Total.rudder0
