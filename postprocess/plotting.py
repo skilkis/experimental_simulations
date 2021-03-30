@@ -152,18 +152,33 @@ def regplot(
 # Quantify effect of the slipstream on directional stability at Beta = 0
 with figure("SlipstreamJSweep") as (fig, ax):
     d = DATA["BalData"].windOn.j_sweep
-    unc = ax.plot(d.TC1, -d.CMy, label="Total", marker="+", linewidth=1)
-    reg = regplot(
-        lines=unc,
-        deg=1,
-        ci=95,
-        x_label=r"\beta",
-        y_label=r"C_n",
+    d_corr = DATA["BalDataCorr"].Total.j_sweep
+    corr = ax.plot(
+        d_corr.TC1,
+        d_corr.CMy,
+        label="Total Moment",
+        marker="+",
     )
+    unc = ax.plot(
+        d.TC1,
+        d.CMy,
+        label="Uncorrected",
+        marker="x",
+        alpha=0.5,
+        color=corr[-1].get_color(),
+    )
+    unc_aero = ax.plot(d.TC1, d.CMya, label="Aerodynamic Moment", marker="+")
     unc_aero = ax.plot(
-        d.TC1, -d.CMya, label="Aerodynamic", marker="x", linewidth=1
+        d_corr.TC1,
+        d_corr.CMya,
+        label="Uncorrected",
+        alpha=0.5,
+        marker="x",
+        color=unc_aero[-1].get_color(),
     )
-    ax.set_xlabel("Thrust Coefficient $T_{c_{L}}$")
+    ax.set_xlabel("Port Engine Thrust Coefficient $T_{c_{P}}$")
+    ax.set_ylabel("Yaw Moment Coefficient $C_n$")
+    ax.legend(loc="best", ncol=2)
     ax.set_ylabel("Yaw Moment Coefficient $C_n$")
     ax.legend(loc="best")
 
