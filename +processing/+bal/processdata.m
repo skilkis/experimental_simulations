@@ -147,7 +147,8 @@ for i=1:length(fnBAL) % loop over the files that are to be loaded
         modelType,...
         modelPos,...
         testSec...
-    );    
+    );
+    BAL.windOn.(BAL.config{i}).AoS = BAL.windOn.(BAL.config{i}).AoS * -1;
     
 end % end for loop over filenames
 
