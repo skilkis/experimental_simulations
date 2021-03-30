@@ -118,11 +118,13 @@ function [BalDataCorr] = applycorrection(BAL)
         % vertical tail due to its own circulation
         Tau_2 = 0.07;           % Taper = 0.68, MAC = 0.17, Lt = 0.085, Lt/2H = 0.11, Fig. 10.37 in the Barlow book
         Delta = 0.12;          % Elliptic loading for a closed elliptic jet, Fig. 10.32 in the Barlow book
+        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*Total.CY;
         diff_AOS = mean(diff(Total.AoS));
         if diff_AOS == 0
-            diff_AOS = 0.3778;
+            Slope_CN_vs_Beta = -0.021;
+        else
+            Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ diff_AOS;
         end
-        Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ diff_AOS;        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*Total.CY;
         Delta_Cm = 0.125*Delta_Beta_Total_SC*Slope_CN_vs_Beta;               % moment = arm*db*dCn/db (Barlow page 377)
         Total.CD = Total.CD + Delta*(A_VTail/A_tunnel)*Total.CL.^2;           % Equation 2.10 pre-test report
 
@@ -138,12 +140,13 @@ function [BalDataCorr] = applycorrection(BAL)
         
         % Only slipstream correction
         CN_Tail = SL.CY;
+        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*SL.CY;
         diff_AOS = mean(diff(SL.AoS));
         if diff_AOS == 0
-            diff_AOS = 0.3778;
+            Slope_CN_vs_Beta = -0.021;
+        else
+            Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ diff_AOS;
         end
-        Slope_CN_vs_Beta = mean(diff(CN_Tail)) ./ diff_AOS;
-        Delta_Beta_Total_SC = (1+Tau_2)*Delta*(A_VTail/A_tunnel)*SL.CY;
         Delta_Cm = 0.125*Delta_Beta_Total_SC*Slope_CN_vs_Beta;               % moment = arm*db*dCn/db (Barlow page 377)
         SL.CD = SL.CD + Delta*(A_VTail/A_tunnel)*SL.CL.^2;           % Equation 2.10 pre-test report
 
