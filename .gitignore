@@ -9,3 +9,6 @@ data/**.mat
 
 # MATLAB temporary files
 *.asv
+
+# Ignore saved matplotlib figures
+figures/*
