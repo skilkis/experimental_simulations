@@ -1,16 +1,15 @@
-from functools import cached_property
 import os
 from contextlib import contextmanager
+from functools import cached_property
 from pathlib import Path
 from typing import Any, Dict, Iterable, Optional, Sequence, Tuple, Union
-import matplotlib
 
 import numpy as np
-from numpy.polynomial import Polynomial
 import seaborn as sns
 from matplotlib import pyplot as plt
-from scipy.io import loadmat
 from matplotlib.lines import Line2D
+from numpy.polynomial import Polynomial
+from scipy.io import loadmat
 
 ROOT_DIR: Path = Path(__file__).parent.parent
 FIGURE_PATH: Path = ROOT_DIR / "figures"
