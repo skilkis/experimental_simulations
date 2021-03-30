@@ -64,7 +64,7 @@ function [BalDataCorr] = applycorrection(BAL)
 
         % Check if separated and assign non-negative value
         if Cd_s < 0
-            Cd_s = 0;
+            Cd_s = 0.*Cd_s;
         end
 
         Epsilon_Wake_Blockage = (S*Cd_0 + 5*S*Cd_s)/(4*A_tunnel);
