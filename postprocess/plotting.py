@@ -186,7 +186,7 @@ with figure("SlipstreamJSweep") as (fig, ax):
 # TODO find out why negative Cn_beta does not work?
 with figure("CnBetaRudder0Thrust0") as (fig, ax):
     d = DATA["BalData"].windOn.rudder0  # Select relevant data
-    d_corr = DATA["BalDataCorr"].rudder0.Total
+    d_corr = DATA["BalDataCorr"].Total.rudder0
     for velocity, zero_thrust_rpm in (points := {20: 41.6, 40: 78.5}).items():
         # Filtering data at the current velocity, AoA, and zero thrust
         idx_v = np.isclose(d.V, velocity, atol=1)
@@ -199,7 +199,7 @@ with figure("CnBetaRudder0Thrust0") as (fig, ax):
         sorted_idx = np.argsort(d.AoS[idx])
         corrected = ax.plot(
             d_corr.AoS[idx][sorted_idx],
-            -d_corr.CMy[idx][sorted_idx],
+            d_corr.CMy[idx][sorted_idx],
             label=f"V={velocity} m/s",
             marker="+",
             zorder=2 if velocity == 20 else 1,
@@ -208,7 +208,7 @@ with figure("CnBetaRudder0Thrust0") as (fig, ax):
         # Adding uncorrected data
         uncorrected = ax.plot(
             d.AoS[idx][sorted_idx],
-            -d.CMy[idx][sorted_idx],
+            d.CMy[idx][sorted_idx],
             label=f"V={velocity} m/s Uncorrected",
             marker="x",
             color=corrected[-1].get_color(),
