@@ -228,13 +228,149 @@ with figure("CnBetaRudder0Thrust0") as (fig, ax):
     ax.set_ylabel("Yaw Moment Coefficient $C_n$")
     ax.legend(loc="best", ncol=len(points))
 
-# Cn vs beta, Cndelta vs. beta, and w/ AoA
+with figure("CnBetaRudder0V40OEI") as (fig, ax):
+    d = DATA["BalData"].windOn.rudder0  # Select relevant data
+    d_corr = DATA["BalDataCorr"].Total.rudder0
+    velocity = 40
+    points = [
+        ("Both Off", 78.5, 78.5),
+        ("Both On", 98.24, 98.24),
+        ("Starboard On", 78.5, 98.24),
+        ("Port On", 98.24, 78.5),
+    ]
+    for label, port_rpm, star_rpm in points:
+        # Filtering data at the current velocity, AoA, and zero thrust
+        idx_v = np.isclose(d.V, velocity, atol=1)
+        idx_aoa = np.isclose(d.AoA, 0, atol=1)
+        idx_m1 = np.isclose(d.rpsM1, port_rpm, atol=1)
+        idx_m2 = np.isclose(d.rpsM2, star_rpm, atol=1)
+        idx = idx_v & idx_aoa & idx_m1 & idx_m2
 
-# Only V40 for AoA effect, this is limited to potentially not capturing
-# non-linearties at low reynolds due to sepration.
+        # Creating main line plot
+        sorted_idx = np.argsort(d.AoS[idx])
+        corrected = ax.plot(
+            d_corr.AoS[idx][sorted_idx],
+            d_corr.CMy[idx][sorted_idx],
+            label=label,
+            marker="+",
+            zorder=2 if velocity == 20 else 1,
+        )
 
-# TODO show all the different correction contributions on Cn B
-# TODO Noise measurements (idea use noise to estimate separation)
-# Non-dimensionalize w/ pressure jump
+        # Adding uncorrected data
+        uncorrected = ax.plot(
+            d.AoS[idx][sorted_idx],
+            d.CMy[idx][sorted_idx],
+            label=f"Uncorrected",
+            marker="x",
+            color=corrected[-1].get_color(),
+            zorder=0,
+            alpha=0.5,
+        )
+    ax.set_xlabel("Angle of Sideslip $\\beta$")
+    ax.set_ylabel("Yaw Moment Coefficient $C_n$")
+    ax.legend(loc="best", ncol=len(points))
 
-# TODO Find scaling for noise
+with figure("ControlPowerV40OEIAll") as (fig, ax):
+    r_0 = DATA["BalDataCorr"].Total.rudder0  # Select relevant data
+    r_10 = DATA["BalDataCorr"].Total.rudder10  # Select relevant data
+    velocity = 40
+    points = [
+        ("Both Off", 78.5, 78.5),
+        ("Both On", 98.24, 98.24),
+        ("Starboard On", 78.5, 98.24),
+        ("Port On", 98.24, 78.5),
+    ]
+    for label, port_rpm, star_rpm in points:
+        # Filtering data at the current velocity, AoA, and zero thrust
+        idx_dict = {}
+        for d in (r_0, r_10):
+            idx_v = np.isclose(d.V, velocity, atol=1)
+            idx_aoa = np.isclose(d.AoA, 0, atol=1)
+            idx_m1 = np.isclose(d.rpsM1, port_rpm, atol=1)
+            idx_m2 = np.isclose(d.rpsM2, star_rpm, atol=1)
+            idx = idx_v & idx_aoa & idx_m1 & idx_m2
+            idx_dict[d] = idx
+
+        cn_delta = (r_10.CMy - r_0.CMy) / 10
+        # Creating main line plot
+        sorted_idx = np.argsort(d.AoS[idx])
+        corrected = ax.plot(
+            r_0.AoS[idx][sorted_idx],
+            cn_delta[idx][sorted_idx],
+            label=label,
+            marker="+",
+            zorder=2 if velocity == 20 else 1,
+        )
+    ax.set_xlabel("Angle of Sideslip $\\beta$")
+    ax.set_ylabel("Linearized Control Power $C_{n_\\delta}$")
+    ax.legend(loc="best", ncol=len(points))
+
+with figure("CnBetaRudder0&10V40OEI") as (fig, ax):
+    r_0 = DATA["BalDataCorr"].Total.rudder0  # Select relevant data
+    r_10 = DATA["BalDataCorr"].Total.rudder10  # Select relevant data
+    velocity = 40
+    points = [
+        ("Both On", 98.24, 98.24),
+        ("Port On", 98.24, 78.5),
+    ]
+    for label, port_rpm, star_rpm in points:
+        # Filtering data at the current velocity, AoA, and zero thrust
+        for i, (rudder, d) in enumerate([(0, r_0), (10, r_10)]):
+            idx_v = np.isclose(d.V, velocity, atol=2)
+            idx_aoa = np.isclose(d.AoA, 0, atol=2)
+            idx_m1 = np.isclose(d.rpsM1, port_rpm, atol=2)
+            idx_m2 = np.isclose(d.rpsM2, star_rpm, atol=2)
+            idx = idx_v & idx_aoa & idx_m1 & idx_m2
+            sorted_idx = np.argsort(d.AoS[idx])
+
+            # Getting previous plot color if not the first iteration
+            kwargs = {"color": handle[-1].get_color()} if i > 0 else {}
+            handle = ax.plot(
+                d.AoS[idx][sorted_idx],
+                d.CMy[idx][sorted_idx],
+                label=f"{label}, $\\delta ={rudder}$ [deg]",
+                marker="+" if i == 0 else "x",
+                alpha=1 if i == 0 else 0.5,
+                **kwargs,
+            )
+
+    ax.set_xlabel("Angle of Sideslip $\\beta$")
+    ax.set_ylabel("Yaw Moment Coefficient $C_n$")
+    ax.legend(loc="best", ncol=len(points))
+
+with figure("ReynoldsEffects") as (fig, ax):
+    r_0 = DATA["BalDataCorr"].Total.rudder0  # Select relevant data
+    r_10 = DATA["BalDataCorr"].Total.rudder10  # Select relevant data
+    aoa = 0
+    points = [
+        (20, 41.6, 49.12),
+        (30, 60.2, 73.68),
+        (40, 78.5, 98.24),
+    ]
+    for velocity, port_rpm, star_rpm in points:
+        # Filtering data at the current velocity, AoA, and zero thrust
+        for i, (rudder, d) in enumerate([(0, r_0), (10, r_10)]):
+            idx_v = np.isclose(d.V, velocity, atol=2)
+            idx_aoa = np.isclose(d.AoA, 0, atol=2)
+            idx_aos_2 = np.isclose(d.AoS, -2, atol=1)
+            idx_aos_7 = np.isclose(d.AoS, -7, atol=1)
+            idx_aos_10 = np.isclose(d.AoS, -10, atol=1)
+            idx_aos = idx_aos_2 | idx_aos_7 | idx_aos_10
+            idx_m1 = np.isclose(d.rpsM1, port_rpm, atol=2)
+            idx_m2 = np.isclose(d.rpsM2, star_rpm, atol=2)
+            idx = idx_v & idx_aoa & idx_m1 & idx_m2 & idx_aos
+            sorted_idx = np.argsort(d.AoS[idx])
+
+            # Getting previous plot color if not the first iteration
+            kwargs = {"color": handle[-1].get_color()} if i > 0 else {}
+            handle = ax.plot(
+                d.AoS[idx][sorted_idx],
+                d.CMy[idx][sorted_idx],
+                label=f"$V={velocity}$ [m/s], $\\delta={rudder}$ [deg]",
+                marker="+" if i == 0 else "x",
+                alpha=1 if i == 0 else 0.5,
+                **kwargs,
+            )
+    ax.set_xlabel("Angle of Sideslip $\\beta$")
+    ax.set_ylabel("Yaw Moment Coefficient $C_n$")
+    ax.legend(loc="best", ncol=len(points))
