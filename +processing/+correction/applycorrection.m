@@ -89,24 +89,28 @@ function [BalDataCorr] = applycorrection(BAL)
         SB.CL = SB.CL.*Base.V.^2 ./ SB.V.^2;
         SB.CY = SB.CY.*Base.V.^2 ./ SB.V.^2;
         SB.CMy = SB.CMy.*Base.V.^2 ./ SB.V.^2;
+        SB.CMya = SB.CMya.*Base.V.^2 ./ SB.V.^2;
         
         % Correct Only Wake Blockage
         WB.CD = WB.CD.*Base.V.^2 ./ WB.V.^2;
         WB.CL = WB.CL.*Base.V.^2 ./ WB.V.^2;
         WB.CY = WB.CY.*Base.V.^2 ./ WB.V.^2;
         WB.CMy = WB.CMy.*Base.V.^2 ./ WB.V.^2;
+        WB.CMya = WB.CMya.*Base.V.^2 ./ WB.V.^2;
         
         % Correct Only Slipstream Blockage
         SS.CD = SS.CD.*Base.V.^2 ./ SS.V.^2;
         SS.CL = SS.CL.*Base.V.^2 ./ SS.V.^2;
         SS.CY = SS.CY.*Base.V.^2 ./ SS.V.^2;
         SS.CMy = SS.CMy.*Base.V.^2 ./ SS.V.^2;
+        SS.CMya = SS.CMya.*Base.V.^2 ./ SS.V.^2;
         
         % Correct coefficents due to all blockages
         Total.CD = Total.CD.*Base.V.^2 ./ Total.V.^2;
         Total.CL = Total.CL.*Base.V.^2 ./ Total.V.^2;
         Total.CY = Total.CY.*Base.V.^2 ./ Total.V.^2;
         Total.CMy = Total.CMy.*Base.V.^2 ./ Total.V.^2;
+        Total.CMya = Total.CMya.*Base.V.^2 ./ Total.V.^2;
 
         CN_Tail = Total.CY;
 
@@ -123,6 +127,7 @@ function [BalDataCorr] = applycorrection(BAL)
         Total.CD = Total.CD + Delta*(A_VTail/A_tunnel)*Total.CL.^2;           % Equation 2.10 pre-test report
 
         Total.CMy = Total.CMy + Delta_Cm;
+        Total.CMya = Total.CMya + Delta_Cm;
         
         % Downwash correction
         Beta_u = Total.AoS;
@@ -143,6 +148,7 @@ function [BalDataCorr] = applycorrection(BAL)
         SL.CD = SL.CD + Delta*(A_VTail/A_tunnel)*SL.CL.^2;           % Equation 2.10 pre-test report
 
         SL.CMy = SL.CMy + Delta_Cm;
+        SL.CMya = SL.CMya + Delta_Cm;
         SL.AoS = SL.AoS + Delta_Beta_Total_SC;
         
         % Downwash correction
