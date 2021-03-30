@@ -154,11 +154,11 @@ function [BalDataCorr] = applycorrection(BAL)
 %         dp_by_dv = ;                        % from pressure taps along the fuselage
 %         del_D = dp_by_dv * V_total;
 %         BAL_new.CD = BAL_new.CD - del_D/(0.5*BAL_new.rho.*BAL_new.V.^2.*BAL_new.S);
-        BalDataCorr.(field{:}).SB = SB;
-        BalDataCorr.(field{:}).WB = WB;
-        BalDataCorr.(field{:}).SS = SS;
-        BalDataCorr.(field{:}).SL = SL;
-        BalDataCorr.(field{:}).DW = DW;
-        BalDataCorr.(field{:}).Total = Total;
+        BalDataCorr.SB.(field{:}) = SB;
+        BalDataCorr.WB.(field{:}) = WB;
+        BalDataCorr.SS.(field{:}) = SS;
+        BalDataCorr.SL.(field{:}) = SL;
+        BalDataCorr.DW.(field{:}) = DW;
+        BalDataCorr.Total.(field{:}) = Total;
     end
 end
