@@ -86,8 +86,8 @@ end
 % Iterating through velocities in nearest tenths (i.e. 20, 30, 40)
 BAL.TC1 = zeros(length(BAL.V),1);
 BAL.TC2 = zeros(length(BAL.V),1);
-BAL.CFtM1 = zeros(length(BAL.V),1);
-BAL.CFtM2 = zeros(length(BAL.V),1);
+BAL.CTM1 = zeros(length(BAL.V),1);
+BAL.CTM2 = zeros(length(BAL.V),1);
 Vmeas = unique(round(BAL.V, -1))'; %Measured velocities (i.e. 20, 30, 40)
 
 % Estimating thrust coefficient and normalized thrust force per motor
@@ -96,9 +96,9 @@ for V = Vmeas
     BAL.TC1(idx) = processing.correction.estimatethrust(V,BAL.J_M1(idx));
     BAL.TC2(idx) = processing.correction.estimatethrust(V,BAL.J_M2(idx));
     % Normalized tangential force (thrust) due to motor 1 and 2:
-    BAL.CFtM1(idx) = BAL.TC1(idx).*(BAL.rho(idx)...
+    BAL.CTM1(idx) = BAL.TC1(idx).*(BAL.rho(idx)...
         .*BAL.rpsM1(idx).^2*D.^4)./(oper.qInf(idx)*S);
-    BAL.CFtM2(idx) = BAL.TC2(idx).*(BAL.rho(idx)...
+    BAL.CTM2(idx) = BAL.TC2(idx).*(BAL.rho(idx)...
         .*BAL.rpsM2(idx).^2*D.^4)./(oper.qInf(idx)*S);
 end
 
@@ -121,7 +121,7 @@ BAL.AoS = AoS;
 % if strcmpi(modelType,'aircraft') || strcmpi(modelType,'3dwing')
     % forces in balance axis system
 %     CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA); % tangential force [N]
-CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA) - BAL.CFtM1 - BAL.CFtM2; % tangential force without thrust [N]
+CFt = CF(:,1).*cosd(AoA) - CF(:,3).*sind(AoA) - BAL.CTM1 - BAL.CTM2; % tangential force without thrust [N]
 CFn = CF(:,3).*cosd(AoA) + CF(:,1).*sind(AoA); % normal force [N]
 CFs = -CF(:,2); % side force [N]
 
@@ -133,7 +133,7 @@ CMy = CM(:,3) + XmRefB(2)*CF(:,1) - XmRefB(1)*CF(:,2); % yawing moment [Nm]
 % Motor 1 creates a positive yawing moment, while motor 2 creates
 % a negative one. Therefore, the yawing moment due to thrust is
 % added to compensate for M2, while it is subtracted for M1.
-CMya = CMy + (BAL.CFtM2 - BAL.CFtM1) * YmProp;  % Aerodynamic yaming moment
+CMya = CMy + (BAL.CTM2 - BAL.CTM1) * YmProp;  % Aerodynamic yawing moment
 
 % recalculate moments in the airplane axis system
 CMr = CMr.*cosd(AoA) - CMy.*sind(AoA);
