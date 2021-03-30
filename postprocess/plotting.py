@@ -97,15 +97,17 @@ class Regression:
         coef_fmt: str,
         show_stats: bool = True,
     ) -> str:
-        indeps = []
+        rhs = ""
         for power, coef in reversed(tuple(enumerate(self.polynomial.coef))):
-            if power == 0:
-                indeps.append(coef_fmt.format(coef))
+            c_str = f"{coef_fmt.format(coef)}{x_label}"
+            x_str = f"{x_label}" if power > 1 else ""
+            p_str = f"^{{{power_fmt.format(power)}}}" if power > 1 else ""
+            if power == self.polynomial.coef.size - 1:  # 1st coefficient?
+                rhs += f"{c_str}{x_str}{p_str}"
             else:
-                c_str = f"{coef_fmt.format(coef)}{x_label}"
-                p_str = f"^{{{power_fmt.format(power)}}}" if power > 1 else ""
-                indeps.append(c_str + p_str)
-        equation = f"${y_label} = {' + '.join(indeps)}$"
+                oper = " - " if c_str.startswith("-") else " + "
+                rhs += f"{oper}{c_str}{x_str}{p_str}"
+        equation = f"${y_label} = {rhs}$"
         stats = f"$R^2 = {self.r_squared:.4f}$"
         return f"{equation}\n{stats}" if show_stats else equation
 
