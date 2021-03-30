@@ -141,7 +141,7 @@ def regplot(
             order=deg,
             ci=ci,
             color=line.get_color(),
-            line_kws=dict(linestyle="--"),
+            line_kws=dict(linestyle="--", linewidth=0.5),
             label=label,
             scatter=False,
         )
