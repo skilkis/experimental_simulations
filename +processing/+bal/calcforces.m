@@ -86,20 +86,24 @@ end
 % Iterating through velocities in nearest tenths (i.e. 20, 30, 40)
 BAL.TC1 = zeros(length(BAL.V),1);
 BAL.TC2 = zeros(length(BAL.V),1);
+BAL.FT1 = zeros(length(BAL.V),1);
+BAL.FT2 = zeros(length(BAL.V),1);
 BAL.CTM1 = zeros(length(BAL.V),1);
 BAL.CTM2 = zeros(length(BAL.V),1);
 Vmeas = unique(round(BAL.V, -1))'; %Measured velocities (i.e. 20, 30, 40)
 
 % Estimating thrust coefficient and normalized thrust force per motor
+% TODO check if the correct diameter was used
 for V = Vmeas
     idx = find(abs(BAL.V - V) <= 3);
     BAL.TC1(idx) = processing.correction.estimatethrust(V,BAL.J_M1(idx));
     BAL.TC2(idx) = processing.correction.estimatethrust(V,BAL.J_M2(idx));
+    % Thrust Force due to motor 1 and 2:
+    BAL.FT1(idx) = BAL.TC1(idx).*(BAL.rho(idx).*BAL.rpsM1(idx).^2*D.^4);
+    BAL.FT2(idx) = BAL.TC2(idx).*(BAL.rho(idx).*BAL.rpsM2(idx).^2*D.^4);
     % Normalized tangential force (thrust) due to motor 1 and 2:
-    BAL.CTM1(idx) = BAL.TC1(idx).*(BAL.rho(idx)...
-        .*BAL.rpsM1(idx).^2*D.^4)./(oper.qInf(idx)*S);
-    BAL.CTM2(idx) = BAL.TC2(idx).*(BAL.rho(idx)...
-        .*BAL.rpsM2(idx).^2*D.^4)./(oper.qInf(idx)*S);
+    BAL.CTM1(idx) = BAL.FT1(idx)./(oper.qInf(idx)*S);
+    BAL.CTM2(idx) = BAL.FT2(idx)./(oper.qInf(idx)*S);
 end
 
 %% Compute nondimensional forces and moments
