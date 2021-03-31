@@ -1,3 +1,4 @@
+import itertools
 import os
 from contextlib import contextmanager
 from functools import cached_property
@@ -44,6 +45,8 @@ def figure(
             # Modify rcParams locally
             plt.style.use({"lines.linewidth": 1})
             fig, ax = plt.subplots(num=name, figsize=figsize, **kwargs)
+            if isinstance(ax, Iterable):
+                ax = list(itertools.chain.from_iterable(ax))
             yield fig, ax
     finally:
         if os.getenv("CI") is None and PLOT:
@@ -396,7 +399,7 @@ with figure("CnBetaCorrections") as (fig, ax):
         )
     ax.set_yscale("log")
     ax.set_xlabel("Angle of Sideslip $\\beta$")
-    ax.set_ylabel("Diff. of Yaw Moment Coefficient $\\Delta C_n$")
+    ax.set_ylabel("\\% Diff. of Yaw Moment Coefficient $\\Delta C_n$")
     ax.legend(loc="best")
 
 with figure("CnDeltaCorrectionsV40BothOff") as (fig, ax):
@@ -431,61 +434,63 @@ with figure("CnDeltaCorrectionsV40BothOff") as (fig, ax):
             )
     ax.set_yscale("log")
     ax.set_xlabel("Angle of Sideslip $\\beta$")
-    ax.set_ylabel("Diff. of Linearized Control Power $\Delta C_{n_\\delta}$")
+    ax.set_ylabel(
+        "\\% Diff. of Linearized Control Power $\Delta C_{n_\\delta}$"
+    )
     ax.legend(loc="best")
 
-with figure("SPLV20ZeroThrustBeta", nrows=6, sharex=True) as (fig, axes):
-    d = DATA["BalDataCorr"].Total.rudder0
-    d_mic = DATA["MicData"].rudder0
-
-    # Plotting SPL for all mics
-    for mic_number, ax in enumerate(axes):
-        for beta in (-10, 2):
-            # Filtering data
-            idx_v = np.isclose(d_mic.opp.vInf, 20, atol=2)
-            idx_rpsM1 = np.isclose(d_mic.opp.RPS_M1, 41.6, atol=2)
-            idx_rpsM2 = np.isclose(d_mic.opp.RPS_M2, 41.6, atol=2)
-            idx_aos = np.isclose(d_mic.opp.AoS, beta, atol=1)
-            idx = idx_v & idx_rpsM1 & idx_rpsM2 & idx_aos
-            ax.plot(
-                d_mic.f[idx][0] / 1e3,
-                d_mic.SPL[idx][0][:, mic_number],
-                label=f"$\\beta = {beta}$ [deg]",
-            )
-        ax.set_ylabel(f"Mic {mic_number + 1}")
-
-    ax.set_xlabel("Frequency [kHz]")
-    handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center")
-    fig.supylabel("Sound Pressure Level [dB]")
-    fig.align_ylabels(axes)
-
-with figure("SPLV20ZeroThrustBeta", nrows=6, sharex=True) as (fig, axes):
-    d = DATA["BalDataCorr"].Total.rudder0
-    d_mic = DATA["MicData"].rudder0
+with figure("SPLTSweep") as (fig, ax):
+    d = DATA["BalDataCorr"].Total.j_sweep
+    d_mic = DATA["MicData"].j_sweep
 
     points = [
-        (20, 41.6, 41.6),
-        (40, 78.5, 78.5),
+        (20, 45, 41.6),
+        (20, 110, 41.6),
     ]
     # Plotting SPL for all mics
-    for mic_number, ax in enumerate(axes):
-        for velocity, rpsM1, rpsM2 in points:
-            # Filtering data
-            idx_v = np.isclose(d_mic.opp.vInf, velocity, atol=2)
-            idx_rpsM1 = np.isclose(d_mic.opp.RPS_M1, rpsM1, atol=2)
-            idx_rpsM2 = np.isclose(d_mic.opp.RPS_M2, rpsM2, atol=2)
-            idx_aos = np.isclose(d_mic.opp.AoS, -10, atol=1)
-            idx = idx_v & idx_rpsM1 & idx_rpsM2 & idx_aos
-            ax.plot(
-                d_mic.f[idx][0] / 1e3,
-                d_mic.SPL[idx][0][:, mic_number],
-                label=f"$\V = {round(velocity)}$ [m/s]",
-            )
-        ax.set_ylabel(f"Mic {mic_number + 1}")
+    mic_number = 5
+    for velocity, rpsM1, rpsM2 in points:
+        # Filtering data
+        idx_v = np.isclose(d_mic.opp.vInf, velocity, atol=2)
+        idx_rpsM1 = np.isclose(d_mic.opp.RPS_M1, rpsM1, atol=2)
+        idx_rpsM2 = np.isclose(d_mic.opp.RPS_M2, rpsM2, atol=2)
+        idx_aos = np.isclose(d_mic.opp.AoS, 0, atol=1)
+        idx = idx_v & idx_rpsM1 & idx_rpsM2 & idx_aos
+        TC = tc if (tc := d.TC1[idx][0]) > 0 else 0
+        ax.plot(
+            d_mic.f[idx][0],
+            d_mic.SPL[idx][0][:, mic_number],
+            label=f"$T_c = {TC:.2f}$",
+        )
+    ax.set_xlim(0, 1000)
+    ax.set_ylim(0, 100)
+    ax.set_ylabel("Sound Pressure Level [dB]")
+    ax.set_xlabel("Frequency [Hz]")
 
-    ax.set_xlabel("Frequency [kHz]")
-    handles, labels = ax.get_legend_handles_labels()
-    fig.legend(handles, labels, loc="upper center")
-    fig.supylabel("Sound Pressure Level [dB]")
-    fig.align_ylabels(axes)
+with figure("PnTSweep") as (fig, ax):
+    d = DATA["BalDataCorr"].Total.j_sweep
+    d_mic = DATA["MicData"].j_sweep
+
+    points = [
+        (20, 45, 41.6),
+        (20, 110, 41.6),
+    ]
+    # Plotting SPL for all mics
+    mic_number = 5
+    for velocity, rpsM1, rpsM2 in points:
+        # Filtering data
+        idx_v = np.isclose(d_mic.opp.vInf, velocity, atol=2)
+        idx_rpsM1 = np.isclose(d_mic.opp.RPS_M1, rpsM1, atol=2)
+        idx_rpsM2 = np.isclose(d_mic.opp.RPS_M2, rpsM2, atol=2)
+        idx_aos = np.isclose(d_mic.opp.AoS, 0, atol=1)
+        idx = idx_v & idx_rpsM1 & idx_rpsM2 & idx_aos
+        TC = tc if (tc := d.TC1[idx][0]) > 0 else 0
+        ax.plot(
+            d_mic.fn[idx][0],
+            d_mic.Pn[idx][0][:, mic_number],
+            label=f"$T_c = {TC:.2f}$",
+        )
+    ax.set_xlim(0, 5)
+    ax.set_ylim(0, 0.2)
+    ax.set_ylabel("Thrust Normalized Pressure")
+    ax.set_xlabel("Blade Normalized Frequency $\\left[\\frac{f}{BPF}\\right]$")
