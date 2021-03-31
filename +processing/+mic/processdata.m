@@ -1,4 +1,10 @@
-function [MicData] = processdata(data_dir)
+function [MicData] = processdata(data_dir, varargin)
+%% Process Optional Arguments
+arg = inputParser; % Analyzes passed arguments
+addOptional(arg, 'remove_zero', false, @islogical);
+parse(arg, varargin{:});
+remove_zero = arg.Results.remove_zero;
+
 %% Define Constants
 % freestream conditions ONLY FOR GROUPS 1-13 ! 
 % add 1 entry per measurement point ! 
@@ -63,10 +69,26 @@ for folder = tdmsFolders
         f = cache_results.f;
         opp = cache_results.opp;
     end
-        MicData.(fname).PXX = PXX;
-        MicData.(fname).SPL = SPL;
-        MicData.(fname).f = f;
-        MicData.(fname).opp = opp;
+    % Filter zero measurements
+    if remove_zero
+        % For some reason tunnel measurements at V=0 show up as ~1.3 m/s
+        non_zero_idx = opp.vInf > 2;
+        % Hardcoding removal of duplicate data point
+        if strcmp(fname, 'rudder0')
+            non_zero_idx(9) = false;
+        end
+        PXX = PXX(:, non_zero_idx);
+        SPL = SPL(:, non_zero_idx);
+        f = f(:, non_zero_idx);
+        for field = fieldnames(opp)'
+            opp.(field{:}) = opp.(field{:})(non_zero_idx);
+        end
+    end
+    % Assign output to MicData struct by foldername
+    MicData.(fname).PXX = PXX;
+    MicData.(fname).SPL = SPL;
+    MicData.(fname).f = f;
+    MicData.(fname).opp = opp;
 end
 
 %% Loop over all TDMS files of name "Measurement_i.tdms" in data_dir
