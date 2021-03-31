@@ -19,6 +19,10 @@ function [MicData] = normalize(MicData, BalData, D, nBlades)
             end
             thrustPressure(thrustPressure <= 0) = 1;  % Correcting for negative thrust
             MicData.(field{:}).Pn{i} = soundPressure ./ thrustPressure;
+           
+            % Blade Passage Frequency Calculation
+            bpf = (nBlades * MicData.(field{:}).opp.RPS_M1(i));
+            MicData.(field{:}).BPF{i} = MicData.(field{:}).f{i} / bpf;
         end
     end
 end
