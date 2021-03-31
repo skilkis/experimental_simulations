@@ -12,3 +12,6 @@ data/**.mat
 
 # Ignore saved matplotlib figures
 figures/*
+
+# Python cache files
+**/__pycache__/*
