@@ -84,6 +84,9 @@ for folder = tdmsFolders
             opp.(field{:}) = opp.(field{:})(non_zero_idx);
         end
     end
+    % Flip AoS measurement to adhere to flight mechanics sign convention
+    opp.AoS = opp.AoS * -1;
+    
     % Assign output to MicData struct by foldername
     MicData.(fname).PXX = PXX;
     MicData.(fname).SPL = SPL;
