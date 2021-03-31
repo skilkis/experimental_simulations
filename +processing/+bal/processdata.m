@@ -10,6 +10,8 @@
 % =========================================================================
 % | Version |    Date   |   Author  |              Changelog              |
 % |---------|-----------|-----------|-------------------------------------|
+% |   2.2   | 31/03/'21 | S. Kilkis |  Refracted inputs into struct       |
+% |---------|-----------|-----------|-------------------------------------|
 % |   2.1   | 26/02/'21 |  P.Lopez  |  Removed PRS code                   |
 % |---------|-----------|-----------|-------------------------------------|
 % |   2.0   | 17/01/'21 |  P.Lopez  |  Change BAL and PRS to structure    |
@@ -25,28 +27,13 @@
 % Inputs:  diskPath - root path on disk where data is stored
 %          fnBAL    - filename(s) of the raw BAL data file(s)
 %          fn0      - filename(s) of the zero measurement data file(s)
-%          idxB     - structure containing indices balance data (W3D)
-%          D        - propeller diameter [m]
-%          S        - reference area [m^2]
-%          b        - wing span [m]
-%          c        - mean aerodynamic chord [m]
-%          XmRefB   - moment reference points (x,y,z coordinates) in
-%                     balance reference system [1/c] 
-%          XmRefM   - moment reference points (x,y,z coordinates) in model 
-%                     reference system [1/c] 
-%          dAoA     - angle of attack offset (subtracted from measured 
-%                     values)   
-%          dAoS     - angle of sideslip offset (subtracted from measured 
-%                     values)
-%          modelType- type of wind-tunnel model
-%          modelPos - orientation of wind-tunnel model
-%          testSec  - LTT test-section number   
+%          geom     - Geometry struct containing set-up parameters
 % -------------------------------------------------------------------------
 % Outputs: BAL      - structure containing all the configurations.
 %                     Each configuration contains an structure with the
 %                     data of the different parameters.
 % =========================================================================
-function [BAL] = processdata(diskPath,fnBAL,fn0)
+function [BAL] = processdata(diskPath,fnBAL,fn0,geom)
 
 % check whether inputs for raw data and zero data have the same length, and
 % if only one zero file is given, apply it to all data sets, otherwise,
@@ -67,21 +54,21 @@ end
 [idxB, ~] = processing.bal.mapping;
 
 % wing geometry
-b     = 1.4*cosd(4); % span [m]
-cR    = 0.222; % root chord [m]
-cT    = 0.089; % tip chord [m]
-S     = b/2*(cT+cR);   % reference area [m^2]
-taper = cT/cR; % taper ratio
-c     = 2*cR/3*(1+taper+taper^2)/(1+taper); % mean aerodynamic chord [m]
+b     = geom.b; % span [m]
+cR    = geom.cR; % root chord [m]
+cT    = geom.cT; % tip chord [m]
+S     = geom.S;   % reference area [m^2]
+taper = geom.taper; % taper ratio
+c     = geom.c; % mean aerodynamic chord [m]
 
 % prop geometry
-D        = 0.2032; % propeller diameter [m]
-R        = D/2;   % propeller radius [m]
+D        = geom.D; % propeller diameter [m]
+R        = geom.R;   % propeller radius [m]
 
 % moment reference points
 % Use XMRefB and not XMRefM
 % To get the CG to be at 0.55 we can subtract 0.3 on the x coordinate
-XmRefB    = [0,0,0.0465/c]; % moment reference points (x,y,z coordinates) in balance reference system [1/c] 
+XmRefB    = geom.XmRefB; % moment reference points (x,y,z coordinates) in balance reference system [1/c]
 XmRefM    = [0.25,0,0];     % moment reference points (x,y,z coordinates) in model reference system [1/c]
 YmProp    = 0.202565/c;      % y coordinate offset of the propeller from the centerline [1/c]
 
