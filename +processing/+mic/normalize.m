@@ -22,7 +22,8 @@ function [MicData] = normalize(MicData, BalData, D, nBlades)
            
             % Blade Passage Frequency Calculation
             bpf = (nBlades * MicData.(field{:}).opp.RPS_M1(i));
-            MicData.(field{:}).BPF{i} = MicData.(field{:}).f{i} / bpf;
+            MicData.(field{:}).opp.bpf(i) = bpf;
+            MicData.(field{:}).fn{i} = MicData.(field{:}).f{i} / bpf;
         end
     end
 end
