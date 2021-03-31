@@ -1,4 +1,4 @@
-function [MicData] = normalize(MicData, BalData, D)
+function [MicData] = normalize(MicData, BalData, D, nBlades)
     %% Adds sound pressures normalized by the propeller thrust into MicData
     %
     % Args:
@@ -6,14 +6,14 @@ function [MicData] = normalize(MicData, BalData, D)
     %   BalData: Uncorected Balance Data
     %   D: Prop Diameter
 
-    totalPropArea = pi * D / 2;
+    propArea = pi * D / 4;
     for field = fieldnames(MicData)'
-        thrust = BalData.windOn.(field{:}).FT1 + BalData.windOn.(field{:}).FT2;
+        thrust = BalData.windOn.(field{:}).FT1;
         soundPressureData = MicData.(field{:}).PXX;
         for i = 1:length(soundPressureData)
             soundPressure = sqrt(soundPressureData{i});
             % TODO consider using RMS pressure
-            thrustPressure = thrust(i) / totalPropArea;
+            thrustPressure = thrust(i) / propArea;
             if thrustPressure <= 0
                 thrustPressure = 1;
             end
