@@ -266,40 +266,40 @@ with figure("CnBetaRudder0V40OEI") as (fig, ax):
     ax.set_ylabel("Yaw Moment Coefficient $C_n$")
     ax.legend(loc="best", ncol=len(points))
 
-with figure("ControlPowerV40OEIAll") as (fig, ax):
-    r_0 = DATA["BalDataCorr"].Total.rudder0  # Select relevant data
-    r_10 = DATA["BalDataCorr"].Total.rudder10  # Select relevant data
+with figure("CnBetaAlphaV40") as (fig, ax):
+    d = DATA["BalData"].windOn.rudder0  # Select relevant data
+    d_corr = DATA["BalDataCorr"].Total.rudder0
     velocity = 40
-    points = [
-        ("Both Off", 78.5, 78.5),
-        ("Both On", 98.24, 98.24),
-        ("Starboard On", 78.5, 98.24),
-        ("Port On", 98.24, 78.5),
-    ]
-    for label, port_rpm, star_rpm in points:
+    rps = 98.24
+    for alpha in (alphas := (0, 5)) :
         # Filtering data at the current velocity, AoA, and zero thrust
-        idx_dict = {}
-        for d in (r_0, r_10):
-            idx_v = np.isclose(d.V, velocity, atol=1)
-            idx_aoa = np.isclose(d.AoA, 0, atol=1)
-            idx_m1 = np.isclose(d.rpsM1, port_rpm, atol=1)
-            idx_m2 = np.isclose(d.rpsM2, star_rpm, atol=1)
-            idx = idx_v & idx_aoa & idx_m1 & idx_m2
-            idx_dict[d] = idx
+        idx_v = np.isclose(d.V, velocity, atol=1)
+        idx_aoa = np.isclose(d.AoA, alpha, atol=1)
+        idx_aos_n7 = np.isclose(d.AoS, -7, atol=1)
+        idx_aos_7 = np.isclose(d.AoS, 7, atol=1)
+        idx_aos = idx_aos_n7 | idx_aos_7
+        idx_m1 = np.isclose(d.rpsM1, rps, atol=1)
+        idx_m2 = np.isclose(d.rpsM2, rps, atol=1)
+        idx = idx_v & idx_aoa & idx_m1 & idx_m2 & idx_aos
 
-        cn_delta = (r_10.CMy - r_0.CMy) / 10
         # Creating main line plot
         sorted_idx = np.argsort(d.AoS[idx])
         corrected = ax.plot(
-            r_0.AoS[idx][sorted_idx],
-            cn_delta[idx][sorted_idx],
-            label=label,
+            d_corr.AoS[idx][sorted_idx],
+            d_corr.CMy[idx][sorted_idx],
+            label=f"$\\alpha = {alpha}$ [deg]",
             marker="+",
-            zorder=2 if velocity == 20 else 1,
         )
+        regplot(
+            lines=corrected,
+            ci=None,
+            x_label=r"\beta",
+            y_label=r"C_n",
+        )
+    ax.set_xlim(-8, 8)
     ax.set_xlabel("Angle of Sideslip $\\beta$")
-    ax.set_ylabel("Linearized Control Power $C_{n_\\delta}$")
-    ax.legend(loc="best", ncol=len(points))
+    ax.set_ylabel("Yaw Moment Coefficient $C_n$")
+    ax.legend(loc="best", ncol=len(alphas))
 
 with figure("CnBetaRudder0&10V40OEI") as (fig, ax):
     r_0 = DATA["BalDataCorr"].Total.rudder0  # Select relevant data
