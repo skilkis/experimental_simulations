@@ -113,7 +113,7 @@ end
                 dataOpp(:,i) = load(OPPpath);
                 
                 fprintf('\t...Processing file (%d/%d)\n', i, nFiles)
-               % Apply calibration
+               % Apply calibration, pMic = pressure in time domain [Pa]
                 for j=1:6 % loop over the microphones     
                     [pMic{i}(j,:),~,~] = processing.mic.applycalcurve(...
                         fs,...
