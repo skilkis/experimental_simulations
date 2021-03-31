@@ -370,3 +370,122 @@ with figure("ReynoldsEffects") as (fig, ax):
     ax.set_xlabel("Angle of Sideslip $\\beta$")
     ax.set_ylabel("Yaw Moment Coefficient $C_n$")
     ax.legend(loc="best", ncol=len(points))
+
+
+with figure("CnBetaCorrections") as (fig, ax):
+    d = DATA["BalData"].windOn.rudder0  # Select relevant data
+    d_corr = DATA["BalDataCorr"]
+    for field in d_corr._fieldnames:
+        d_corr = getattr(DATA["BalDataCorr"], field).rudder0
+        # V = 40, AoA = 0, M1 Off, M2 On
+        idx_v = np.isclose(d_corr.V, 40, atol=2)
+        idx_aoa = np.isclose(d_corr.AoA, 0, atol=2)
+        idx_m1 = np.isclose(d_corr.rpsM1, 98.24, atol=2)
+        idx_m2 = np.isclose(d_corr.rpsM2, 78.5, atol=2)
+        idx = idx_v & idx_aoa & idx_m1 & idx_m2
+
+        # Creating main line plot
+        sorted_idx = np.argsort(d_corr.AoS[idx])
+
+        # Adding uncorrected data
+        diff = ax.plot(
+            d_corr.AoS[idx][sorted_idx],
+            np.abs(d_corr.CMy[idx][sorted_idx] - d.CMy[idx][sorted_idx]),
+            label=field,
+            marker="x",
+        )
+    ax.set_yscale("log")
+    ax.set_xlabel("Angle of Sideslip $\\beta$")
+    ax.set_ylabel("Diff. of Yaw Moment Coefficient $\\Delta C_n$")
+    ax.legend(loc="best")
+
+with figure("CnDeltaCorrectionsV40BothOff") as (fig, ax):
+    velocity = 40
+    points = [
+        ("Both Off", 78.5, 78.5),
+    ]
+    r_0_base = DATA["BalData"].windOn.rudder0
+    r_10_base = DATA["BalData"].windOn.rudder10
+    for label, port_rpm, star_rpm in points:
+        # Filtering data at the current velocity, AoA, and zero thrust
+        for field in DATA["BalDataCorr"]._fieldnames:
+            r_0 = getattr(DATA["BalDataCorr"], field).rudder0
+            r_10 = getattr(DATA["BalDataCorr"], field).rudder10
+            idx_v = np.isclose(r_0.V, velocity, atol=5)
+            idx_aoa = np.isclose(r_0.AoA, 0, atol=2)
+            idx_m1 = np.isclose(r_0.rpsM1, port_rpm, atol=2)
+            idx_m2 = np.isclose(r_0.rpsM2, star_rpm, atol=2)
+            idx = idx_v & idx_aoa & idx_m1 & idx_m2
+            sorted_idx = np.argsort(r_0.AoS[idx])
+            cn_delta = (r_10.CMy[sorted_idx] - r_0.CMy[sorted_idx]) / 10
+            cn_delta_base = (
+                r_10_base.CMy[sorted_idx] - r_0_base.CMy[sorted_idx]
+            ) / 10
+
+            # Adding uncorrected data
+            diff = ax.plot(
+                r_0_base.AoS[sorted_idx],
+                np.abs(cn_delta - cn_delta_base),
+                label=field,
+                marker="x",
+            )
+    ax.set_yscale("log")
+    ax.set_xlabel("Angle of Sideslip $\\beta$")
+    ax.set_ylabel("Diff. of Linearized Control Power $\Delta C_{n_\\delta}$")
+    ax.legend(loc="best")
+
+with figure("SPLV20ZeroThrustBeta", nrows=6, sharex=True) as (fig, axes):
+    d = DATA["BalDataCorr"].Total.rudder0
+    d_mic = DATA["MicData"].rudder0
+
+    # Plotting SPL for all mics
+    for mic_number, ax in enumerate(axes):
+        for beta in (-10, 2):
+            # Filtering data
+            idx_v = np.isclose(d_mic.opp.vInf, 20, atol=2)
+            idx_rpsM1 = np.isclose(d_mic.opp.RPS_M1, 41.6, atol=2)
+            idx_rpsM2 = np.isclose(d_mic.opp.RPS_M2, 41.6, atol=2)
+            idx_aos = np.isclose(d_mic.opp.AoS, beta, atol=1)
+            idx = idx_v & idx_rpsM1 & idx_rpsM2 & idx_aos
+            ax.plot(
+                d_mic.f[idx][0] / 1e3,
+                d_mic.SPL[idx][0][:, mic_number],
+                label=f"$\\beta = {beta}$ [deg]",
+            )
+        ax.set_ylabel(f"Mic {mic_number + 1}")
+
+    ax.set_xlabel("Frequency [kHz]")
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center")
+    fig.supylabel("Sound Pressure Level [dB]")
+    fig.align_ylabels(axes)
+
+with figure("SPLV20ZeroThrustBeta", nrows=6, sharex=True) as (fig, axes):
+    d = DATA["BalDataCorr"].Total.rudder0
+    d_mic = DATA["MicData"].rudder0
+
+    points = [
+        (20, 41.6, 41.6),
+        (40, 78.5, 78.5),
+    ]
+    # Plotting SPL for all mics
+    for mic_number, ax in enumerate(axes):
+        for velocity, rpsM1, rpsM2 in points:
+            # Filtering data
+            idx_v = np.isclose(d_mic.opp.vInf, velocity, atol=2)
+            idx_rpsM1 = np.isclose(d_mic.opp.RPS_M1, rpsM1, atol=2)
+            idx_rpsM2 = np.isclose(d_mic.opp.RPS_M2, rpsM2, atol=2)
+            idx_aos = np.isclose(d_mic.opp.AoS, -10, atol=1)
+            idx = idx_v & idx_rpsM1 & idx_rpsM2 & idx_aos
+            ax.plot(
+                d_mic.f[idx][0] / 1e3,
+                d_mic.SPL[idx][0][:, mic_number],
+                label=f"$\V = {round(velocity)}$ [m/s]",
+            )
+        ax.set_ylabel(f"Mic {mic_number + 1}")
+
+    ax.set_xlabel("Frequency [kHz]")
+    handles, labels = ax.get_legend_handles_labels()
+    fig.legend(handles, labels, loc="upper center")
+    fig.supylabel("Sound Pressure Level [dB]")
+    fig.align_ylabels(axes)
