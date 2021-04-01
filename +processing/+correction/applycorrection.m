@@ -23,6 +23,10 @@ function [BalDataCorr] = applycorrection(BAL)
     V_total = V_wing + V_fuselage + V_tail;  % Volume not velocity
 
     for field = fieldnames(BAL.windOn)'
+    
+        % Flip beta to phis
+        BAL.windOn.(field{:}).AoS = -BAL.windOn.(field{:}).AoS;
+        
         % Making copies of measured data to mutate differently
         % Base = Base data without any corrections
         % SB = Solid Blockage
@@ -169,5 +173,10 @@ function [BalDataCorr] = applycorrection(BAL)
         BalDataCorr.SL.(field{:}) = SL;
         BalDataCorr.DW.(field{:}) = DW;
         BalDataCorr.Total.(field{:}) = Total;
+    
+        % Flip phis to beta
+        for correction = fieldnames(BalDataCorr)'
+            BalDataCorr.(correction{:}).(field{:}).AoS = -BalDataCorr.(correction{:}).(field{:}).AoS;
+        end
     end
 end
